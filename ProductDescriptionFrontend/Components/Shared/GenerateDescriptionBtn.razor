@@ -1,0 +1,15 @@
+@rendermode InteractiveServer
+
+<button class="btn btn-primary" @onclick="OutputText">Generate Description</button>
+
+<p role="status">@textToOutput</p>
+
+@code {
+    private string textToOutput;
+
+    private void OutputText()
+    {
+        Console.WriteLine("OutputText method called");
+        textToOutput = "Some generated text";
+    }
+}
