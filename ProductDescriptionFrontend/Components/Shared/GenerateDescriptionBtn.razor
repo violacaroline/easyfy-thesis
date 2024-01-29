@@ -1,10 +1,44 @@
 @rendermode InteractiveServer
+@using ProductDescriptionFrontend
+@using System.Net.Http
+@using System.Net.Http.Json
+
 
 <button class="btn btn-primary" @onclick="OutputText">Generate Description</button>
 
 <p role="status">@textToOutput</p>
 
 @code {
+    private ApiResponse apiResponse;
+    private string textToOutput;
+    private HttpClient httpClient;
+
+    protected override void OnInitialized()
+    {
+        httpClient = new HttpClient();
+    }
+
+    private async Task OutputText()
+    {
+        try
+        {
+            Console.WriteLine("OutputText method called");
+
+            // Make the API request to your ASP.NET Core Web API
+            // Make the API request to your ASP.NET Core Web API
+            apiResponse = await httpClient.GetFromJsonAsync<ApiResponse>("http://localhost:5000/product-description");
+            // Set the textToOutput based on the response from the API
+            textToOutput = apiResponse.Message;
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+            // Handle the error as needed
+        }
+    }
+}
+
+@* @code {
     private string textToOutput;
 
     private void OutputText()
@@ -12,4 +46,4 @@
         Console.WriteLine("OutputText method called");
         textToOutput = "Some generated text";
     }
-}
+} *@
