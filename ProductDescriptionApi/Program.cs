@@ -1,3 +1,5 @@
+using ProductDescriptionApi.Services;
+
 // Create a WebApplicationBuilder object
 // to configure the how the ASP.NET service runs
 // **********************************************
@@ -9,7 +11,6 @@ var builder = WebApplication.CreateBuilder(args);
 // **********************************************
 
 
-
 // Configure ASP.NET to use the Controller model
 builder.Services.AddControllers();
 
@@ -17,6 +18,9 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Register OpenAIService
+builder.Services.AddSingleton<OpenAIService>();
 
 // **********************************************
 // After adding and configuring services
