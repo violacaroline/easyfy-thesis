@@ -1,30 +1,48 @@
-namespace ProductDescriptionApi.Services;
-using System.Net.Http;
-using System.Net.Http.Json;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
+using System.Net.Http.Headers;
+using System.Text;
+using Newtonsoft.Json;
+using Microsoft.Extensions.Options;
+
+
 public class OpenAIService
 {
-  private readonly HttpClient _httpClient;
-  private readonly string _apiKey;
-  public OpenAIService(HttpClient httpClient, IConfiguration configuration)
-  {
-    _httpClient = httpClient;
-    _apiKey = configuration["OpenAI:ApiKey"];
-    _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_apiKey}");
-  }
-  public async Task<string> GenerateResponseAsync(string prompt)
-  {
-    var data = new
+   private readonly HttpClient _httpClient;
+    private readonly string _apiKey;
+
+    public OpenAIService(HttpClient httpClient, IOptions<OpenAIServiceOptions> options)
     {
-      model = "text-davinci-003",
-      prompt = prompt,
-      temperature = 0.7,
-      max_tokens = 150
+        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        var settings = options.Value ?? throw new ArgumentNullException(nameof(options));
+        _apiKey = settings.ApiKey ?? throw new ArgumentNullException(nameof(settings.ApiKey));
+        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
+    }
+public async Task<string> CreateChatCompletionAsync(string systemMessage, string userMessage)
+{
+    var requestBody = new
+    {
+        model = "gpt-3.5-turbo", // Use the latest model available to you.
+        messages = new[]
+        {
+            new { role = "system", content = systemMessage },
+            new { role = "user", content = userMessage }
+        }
     };
-    var response = await _httpClient.PostAsJsonAsync("https://api.openai.com/v1/engines/davinci/completions", data);
-    response.EnsureSuccessStatusCode();
-    var result = await response.Content.ReadFromJsonAsync<dynamic>();
-    return result.choices[0].text;
-  }
+
+    string jsonContent = JsonConvert.SerializeObject(requestBody);
+    var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+    HttpResponseMessage response = await _httpClient.PostAsync("https://api.openai.com/v1/chat/completions", content);
+
+    if (response.IsSuccessStatusCode)
+    {
+        string responseContent = await response.Content.ReadAsStringAsync();
+        return responseContent;
+    }
+    else
+    {
+        string errorContent = await response.Content.ReadAsStringAsync();
+        throw new HttpRequestException($"Error calling OpenAI API: {errorContent}");
+    }
+}
+
 }

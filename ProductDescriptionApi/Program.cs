@@ -1,4 +1,4 @@
-using ProductDescriptionApi.Services;
+using System.Net.Http.Headers;
 
 // Create a WebApplicationBuilder object
 // to configure the how the ASP.NET service runs
@@ -19,8 +19,14 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Register OpenAIService
-builder.Services.AddSingleton<OpenAIService>();
+// Register OpenAIService with HttpClient and API Key dependency
+builder.Services.AddHttpClient<OpenAIService>();
+builder.Services.Configure<OpenAIServiceOptions>(builder.Configuration.GetSection("OpenAI"));
+
+
+    // Other client configuration if necessary
+
+
 
 // **********************************************
 // After adding and configuring services
