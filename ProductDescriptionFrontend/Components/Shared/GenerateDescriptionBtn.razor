@@ -2,7 +2,7 @@
 @using ProductDescriptionFrontend
 @using System.Net.Http
 @using System.Net.Http.Json
-
+@using Newtonsoft.Json
 
 <button class="btn btn-primary" @onclick="OutputText">Generate Description</button>
 
@@ -29,13 +29,12 @@
         Console.WriteLine("OutputText method called");
 
         var response = await httpClient.PostAsJsonAsync("http://localhost:5000/product-description/generate", new {});
-        Console.WriteLine(response);
         if (response.IsSuccessStatusCode)
         {
             var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse>();
-                 Console.WriteLine();
+            DeserializedResponse deserializedRes = JsonConvert.DeserializeObject<DeserializedResponse>(apiResponse.Response);
 
-            textToOutput = apiResponse?.Response ?? "No response";
+            textToOutput = deserializedRes.choices[0].message.content ?? "No response";
             
         }
         else
