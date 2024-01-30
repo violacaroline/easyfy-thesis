@@ -9,7 +9,7 @@
 <p role="status">@textToOutput</p>
 
 @code {
-    private ApiResponse apiResponse;
+    private HttpResponseMessage apiResponse;
     private string textToOutput;
     private HttpClient httpClient;
 
@@ -22,19 +22,35 @@
     /// Makes request to generate description.
     /// </summary>
     /// <returns></returns>
-    private async Task OutputText()
+   private async Task OutputText()
+{
+    try
     {
-        try
+        Console.WriteLine("OutputText method called");
+
+        var response = await httpClient.PostAsJsonAsync("http://localhost:5000/product-description/generate", new {});
+        Console.WriteLine(response);
+        if (response.IsSuccessStatusCode)
         {
-            Console.WriteLine("OutputText method called");
+            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse>();
+                 Console.WriteLine();
 
-            apiResponse = await httpClient.GetFromJsonAsync<ApiResponse>("http://localhost:5000/product-description");
-
-            textToOutput = apiResponse.Message;
+            textToOutput = apiResponse?.Response ?? "No response";
+            
         }
-        catch (HttpRequestException ex)
+        else
         {
-            Console.WriteLine($"Error: {ex.Message}");
+            var errorContent = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"Error content: {errorContent}");
+            textToOutput = "Error: " + response.ReasonPhrase + " - " + errorContent;
         }
     }
+    catch (HttpRequestException ex)
+    {
+        Console.WriteLine($"Error: {ex.Message}");
+        textToOutput = "Request failed: " + ex.Message;
+    }
+}
+
+
 }

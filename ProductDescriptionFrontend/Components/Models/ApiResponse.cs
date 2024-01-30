@@ -2,5 +2,5 @@ namespace ProductDescriptionFrontend;
 
 public class ApiResponse
 {
-  public string Message { get; set; }
+  public string Response { get; set; }
 }
