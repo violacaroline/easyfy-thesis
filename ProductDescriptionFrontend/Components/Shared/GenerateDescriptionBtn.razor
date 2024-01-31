@@ -4,52 +4,92 @@
 @using System.Net.Http.Json
 @using Newtonsoft.Json
 
-<button class="btn btn-primary" @onclick="OutputText">Generate Description</button>
 
-<p role="status">@textToOutput</p>
+<input type="text" @oninput="OnInputEvent">
+<div>
+
+
+</div>
+
+<div>
+    <button class="btn btn-primary" @onclick="OutputText">Generate Description</button>
+    <p role="status">@textToOutput</p>
+</div>
+
 
 @code {
     private HttpResponseMessage apiResponse;
     private string textToOutput;
     private HttpClient httpClient;
 
+
     protected override void OnInitialized()
     {
         httpClient = new HttpClient();
+    }
+
+
+    private string prompt = "";
+    private void OnInputEvent(ChangeEventArgs changeEvent)
+
+    {
+        prompt = (string)changeEvent.Value;
     }
 
     /// <summary>
     /// Makes request to generate description.
     /// </summary>
     /// <returns></returns>
-   private async Task OutputText()
-{
-    try
+    private async Task OutputText()
     {
-        Console.WriteLine("OutputText method called");
+        try
 
-        var response = await httpClient.PostAsJsonAsync("http://localhost:5000/product-description/generate", new {});
-        if (response.IsSuccessStatusCode)
         {
-            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse>();
-            DeserializedResponse deserializedRes = JsonConvert.DeserializeObject<DeserializedResponse>(apiResponse.Response);
 
-            textToOutput = deserializedRes.choices[0].message.content ?? "No response";
-            
+            Console.WriteLine("OutputText method called");
+
+            var response = await httpClient.PostAsJsonAsync("http://localhost:5000/product-description/generate", new
+            {
+                systemMessage = "string",
+                userMessage = prompt
+            });
+
+
+            if (response.IsSuccessStatusCode)
+
+            {
+
+                var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse>();
+
+                Console.WriteLine("shirin");
+
+                Console.WriteLine(response.Content);
+
+                DeserializedResponse deserializedRes = JsonConvert.DeserializeObject<DeserializedResponse>(apiResponse.Response);
+
+                textToOutput = deserializedRes.choices[0].message.content ?? "No response";
+
+            }
+
+            else
+
+            {
+
+                var errorContent = await response.Content.ReadAsStringAsync();
+
+                Console.WriteLine($"Error content: {errorContent}");
+
+                textToOutput = "Error: " + response.ReasonPhrase + " - " + errorContent;
+
+            }
         }
-        else
+
+        catch (HttpRequestException ex)
+
         {
-            var errorContent = await response.Content.ReadAsStringAsync();
-            Console.WriteLine($"Error content: {errorContent}");
-            textToOutput = "Error: " + response.ReasonPhrase + " - " + errorContent;
+            Console.WriteLine($"Error: {ex.Message}");
+            textToOutput = "Request failed: " + ex.Message;
+
         }
     }
-    catch (HttpRequestException ex)
-    {
-        Console.WriteLine($"Error: {ex.Message}");
-        textToOutput = "Request failed: " + ex.Message;
-    }
-}
-
-
 }
