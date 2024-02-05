@@ -51,7 +51,7 @@
             var response = await httpClient.PostAsJsonAsync("http://localhost:5000/product-description/generate", new
             {
                 systemMessage = "string",
-                userMessage = prompt
+                userMessage = $"Use svenska, 25 token to generate a product description using the following keywords{prompt} "
             });
 
 
@@ -61,9 +61,6 @@
 
                 var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse>();
 
-                Console.WriteLine("shirin");
-
-                Console.WriteLine(response.Content);
 
                 DeserializedResponse deserializedRes = JsonConvert.DeserializeObject<DeserializedResponse>(apiResponse.Response);
 

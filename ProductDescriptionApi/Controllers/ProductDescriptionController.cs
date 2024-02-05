@@ -21,13 +21,15 @@ public class ProductDescriptionController : ControllerBase
         var response = new { Message = "Hello! You are talking to the API that will generate product descriptions using AI" };
         return Ok(response);
     }
+
+
     // Endpoint to generate product description using chat
     [HttpPost("generate")]
     public async Task<IActionResult> GenerateDescription([FromBody] ProductDescriptionRequest request)
     {
         var SystemMessage = "string";
         // // Call the OpenAI service with the system message and the new user message
-        string response = await _openAIApiService.CreateChatCompletionAsync(SystemMessage, request.UserMessage);
+        string response = await _openAIApiService.CreateChatCompletionAsync(request.SystemMessage, request.UserMessage);
         // Parse the response and return it
         return Ok(new { Response = response });
     }
