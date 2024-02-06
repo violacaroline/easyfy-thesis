@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using ProductDescriptionApi.Models;
 using System.Threading.Tasks;
 
 namespace ProductDescriptionApi.Controllers;
@@ -43,26 +44,4 @@ public async Task<IActionResult> GenerateDescription([FromBody] ProductDescripti
     return Ok(messageContent);
 }
 
-// Define the ApiResponse class according to the expected structure of the response
-public class ApiResponse
-{
-    public List<Choice>? choices { get; set; }
 }
-
-public class Choice
-{
-    public Message? message { get; set; }
-}
-
-public class Message
-{
-    public string? content { get; set; }
-}
-
-}
-
-    public class ProductDescriptionRequest
-    {
-        public string? SystemMessage { get; set; }
-        public string? UserMessage { get; set; }
-    }
