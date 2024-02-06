@@ -40,53 +40,33 @@
     /// Makes request to generate description.
     /// </summary>
     /// <returns></returns>
-    private async Task OutputText()
+   private async Task OutputText()
+{
+    try
     {
-        try
-
+        Console.WriteLine("OutputText method called");
+        var response = await httpClient.PostAsJsonAsync("http://localhost:5000/product-description/generate", new
         {
+            systemMessage = "string",
+            userMessage = $"Use svenska, 25 token to generate a product description using the following keywords{prompt} "
+        });
 
-            Console.WriteLine("OutputText method called");
-
-            var response = await httpClient.PostAsJsonAsync("http://localhost:5000/product-description/generate", new
-            {
-                systemMessage = "string",
-                userMessage = $"Use svenska, 25 token to generate a product description using the following keywords{prompt} "
-            });
-
-
-            if (response.IsSuccessStatusCode)
-
-            {
-
-                var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse>();
-
-
-                DeserializedResponse deserializedRes = JsonConvert.DeserializeObject<DeserializedResponse>(apiResponse.Response);
-
-                textToOutput = deserializedRes.choices[0].message.content ?? "No response";
-
-            }
-
-            else
-
-            {
-
-                var errorContent = await response.Content.ReadAsStringAsync();
-
-                Console.WriteLine($"Error content: {errorContent}");
-
-                textToOutput = "Error: " + response.ReasonPhrase + " - " + errorContent;
-
-            }
+        if (response.IsSuccessStatusCode)
+        {
+            textToOutput = await response.Content.ReadAsStringAsync();
         }
-
-        catch (HttpRequestException ex)
-
+        else
         {
-            Console.WriteLine($"Error: {ex.Message}");
-            textToOutput = "Request failed: " + ex.Message;
-
+            var errorContent = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"Error content: {errorContent}");
+            textToOutput = "Error: " + response.ReasonPhrase + " - " + errorContent;
         }
     }
+    catch (HttpRequestException ex)
+    {
+        Console.WriteLine($"Error: {ex.Message}");
+            textToOutput = "Request failed: " + ex.Message;
+    }
+}
+
 }
