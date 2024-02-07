@@ -18,7 +18,6 @@
 
 
 @code {
-    private HttpResponseMessage apiResponse;
     private string textToOutput;
     private HttpClient httpClient;
 
@@ -29,11 +28,11 @@
     }
 
 
-    private string prompt = "";
+    private string keywords = "";
     private void OnInputEvent(ChangeEventArgs changeEvent)
 
     {
-        prompt = (string)changeEvent.Value;
+        keywords = (string)changeEvent.Value;
     }
 
     /// <summary>
@@ -48,7 +47,7 @@
         var response = await httpClient.PostAsJsonAsync("http://localhost:5000/product-description/generate", new
         {
             systemMessage = "string",
-            userMessage = $"Use svenska, 25 token to generate a product description using the following keywords{prompt} "
+            userMessage = $"Use svenska - write a concise, formal product description, use the following keywords to highlight key attributes and functionalities of the product: {keywords}"
         });
 
         if (response.IsSuccessStatusCode)
