@@ -5,7 +5,18 @@
 @using Newtonsoft.Json
 
 
-<input type="text" @oninput="OnInputEvent">
+@* <input type="text" @oninput="OnInputEvent"> *@
+<div>
+    <label for="keywords">Keywords: </label>
+    <br>
+    <textarea class="form-control" id="keywords" type="text" @bind="keywords" @oninput="OnInputEvent"></textarea>
+</div>
+
+<div>
+    <label for="systemMessage">systemMessage: </label>
+    <br>
+    <textarea class="form-control"  id="systemMessage" type="text" @bind="systemMessage" @oninput="OnSystemInputEvent"></textarea>
+</div>
 <div>
 
 
@@ -35,6 +46,13 @@
         keywords = (string)changeEvent.Value;
     }
 
+    private string systemMessage = "";
+    private void OnSystemInputEvent(ChangeEventArgs changeEvent)
+
+    {
+        systemMessage = (string)changeEvent.Value;
+    }
+
     /// <summary>
     /// Makes request to generate description.
     /// </summary>
@@ -44,10 +62,12 @@
     try
     {
         Console.WriteLine("OutputText method called");
+        Console.WriteLine(systemMessage);
+        Console.WriteLine(keywords);
         var response = await httpClient.PostAsJsonAsync("http://localhost:5000/product-description/generate", new
         {
-            systemMessage = "string",
-            userMessage = $"Use svenska - write a concise, formal product description, use the following keywords to highlight key attributes and functionalities of the product: {keywords}"
+            systemMessage = $"{systemMessage}",
+            userMessage = $"{keywords}"
         });
 
         if (response.IsSuccessStatusCode)
