@@ -25,8 +25,12 @@ public async Task<string> CreateChatCompletionAsync(string systemMessage, string
         {
             new { role = "system", content = systemMessage },
             new { role = "user", content = userMessage }
-        }
+        },
+        temperature = 0.7,
+        n = 1
     };
+
+
 
     string jsonContent = JsonConvert.SerializeObject(requestBody);
     var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
