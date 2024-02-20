@@ -1,37 +1,38 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">ProductDescriptionFrontend</a>
-    </div>
-</div>
+﻿<nav class="navbar">
+  <a class="navbar-brand" href="/">Generator</a>
+  <div class="" id="navbarText">
+    <ul class="nav nav-pills nav-fill">
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
-
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+      <li class="nav-item active">
+         <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="oi oi-home" aria-hidden="true"></span>Home
             </NavLink>
-        </div>
+      </li>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
+      <li class="nav-item">
+        <NavLink class="nav-link" href="generate-product-description">
+                <span class="oi oi-plus" aria-hidden="true"></span>Generator
             </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
+      </li>
+      
+      <li class="nav-item">
+        <NavLink class="nav-link" href="developer">
+                <span class="oi oi-plus" aria-hidden="true"></span>Developer
             </NavLink>
-        </div>
+      </li>
 
-        
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="generate-product-description">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span>Generate Product Description
-            </NavLink>
-        </div>
-    </nav>
-</div>
+    </ul>
+  </div>
+</nav>
 
+
+@code {
+    private bool collapseNavMenu = true;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+}
