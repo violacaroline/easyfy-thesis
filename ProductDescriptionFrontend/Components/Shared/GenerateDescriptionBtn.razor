@@ -1,3 +1,4 @@
+
 @rendermode InteractiveServer
 @using ProductDescriptionFrontend
 @using System.Net.Http
@@ -5,25 +6,15 @@
 @using Newtonsoft.Json
 
 
-@* <input type="text" @oninput="OnInputEvent"> *@
 <div>
     <label for="keywords">Keywords: </label>
     <br>
     <textarea class="form-control" id="keywords" type="text" @bind="keywords" @oninput="OnInputEvent"></textarea>
 </div>
+<br>
 
 <div>
-    <label for="systemMessage">systemMessage: </label>
-    <br>
-    <textarea class="form-control"  id="systemMessage" type="text" @bind="systemMessage" @oninput="OnSystemInputEvent"></textarea>
-</div>
-<div>
-
-
-</div>
-
-<div>
-    <button class="btn btn-primary" @onclick="OutputText">Generate Description</button>
+    <button @onclick="OutputText">Generate Description</button>
     <p role="status">@textToOutput</p>
 </div>
 
@@ -46,12 +37,7 @@
         keywords = (string)changeEvent.Value;
     }
 
-    private string systemMessage = "";
-    private void OnSystemInputEvent(ChangeEventArgs changeEvent)
-
-    {
-        systemMessage = (string)changeEvent.Value;
-    }
+    private string systemMessage = "You will be provided with a product name delimited by triple quotes and word seeds that you will use to generate the description to the product. The description should follow the following constraints: it should not be longer than 5 sentences, it should be compelling, it should be written in Swedish";
 
     /// <summary>
     /// Makes request to generate description.
