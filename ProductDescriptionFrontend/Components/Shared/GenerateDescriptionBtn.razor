@@ -7,9 +7,14 @@
 
 
 <div>
+    <label for="product-name">Product Name: </label>
+    <br>
+<input class="form-control" id="product-name" type="text" @bind="productName"/>
+</div>
+<div>
     <label for="keywords">Keywords: </label>
     <br>
-    <textarea class="form-control" id="keywords" type="text" @bind="keywords" @oninput="OnInputEvent"></textarea>
+    <textarea class="form-control" id="keywords" @bind="keywords"></textarea>
 </div>
 <br>
 
@@ -31,13 +36,23 @@
 
 
     private string keywords = "";
-    private void OnInputEvent(ChangeEventArgs changeEvent)
-
+   
+    private string productName = "";
+   private void OnChangeEvent(ChangeEventArgs changeEvent, string propertyName)
+{
+    var value = (string)changeEvent.Value;
+    if (propertyName == "keywords")
     {
-        keywords = (string)changeEvent.Value;
+        keywords = value;
     }
+    else if (propertyName == "productName")
+    {
+        productName = value;
+    }
+}
 
-    private string systemMessage = "You will be provided with a product name delimited by triple quotes and word seeds that you will use to generate the description to the product. The description should follow the following constraints: it should not be longer than 5 sentences, it should be compelling, it should be written in Swedish";
+
+    private readonly  string systemMessage = "You will be provided with a product name delimited by triple quotes and word seeds that you will use to generate the description to the product. The description should follow the following constraints: it should not be longer than 5 sentences, it should be compelling, it should be written in Swedish";
 
     /// <summary>
     /// Makes request to generate description.
@@ -48,11 +63,12 @@
     try
     {
         Console.WriteLine("OutputText method called");
+        Console.WriteLine($"\"\"\"{productName}\"\"\"{keywords}");
     
         var response = await httpClient.PostAsJsonAsync("http://localhost:5000/product-description/generate", new
         {
             systemMessage = $"{systemMessage}",
-            userMessage = $"{keywords}"
+            userMessage = $"\"\"\"{productName}\"\"\"{keywords}"
         });
 
         if (response.IsSuccessStatusCode)
