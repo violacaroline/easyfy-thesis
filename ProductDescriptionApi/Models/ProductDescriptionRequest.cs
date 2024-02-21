@@ -9,5 +9,6 @@ namespace ProductDescriptionApi.Models
     {
          public string? SystemMessage { get; set; }
         public string? UserMessage { get; set; }
+        public string? Temperature { get; set; }
     }
 }

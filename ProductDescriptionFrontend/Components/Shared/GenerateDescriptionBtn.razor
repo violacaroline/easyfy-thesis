@@ -48,8 +48,7 @@
     try
     {
         Console.WriteLine("OutputText method called");
-        Console.WriteLine(systemMessage);
-        Console.WriteLine(keywords);
+    
         var response = await httpClient.PostAsJsonAsync("http://localhost:5000/product-description/generate", new
         {
             systemMessage = $"{systemMessage}",

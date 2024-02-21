@@ -16,7 +16,7 @@ public class OpenAIService
         _apiKey = settings.ApiKey ?? throw new ArgumentNullException(nameof(settings.ApiKey));
         _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
     }
-public async Task<string> CreateChatCompletionAsync(string systemMessage, string userMessage)
+public async Task<string> CreateChatCompletionAsync(string systemMessage, string userMessage, double temperature = 0.7)
 {
     var requestBody = new
     {
@@ -26,13 +26,14 @@ public async Task<string> CreateChatCompletionAsync(string systemMessage, string
             new { role = "system", content = systemMessage },
             new { role = "user", content = userMessage }
         },
-        temperature = 0.7,
+        temperature = temperature,
         n = 1
     };
 
 
 
     string jsonContent = JsonConvert.SerializeObject(requestBody);
+
     var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
     HttpResponseMessage response = await _httpClient.PostAsync("https://api.openai.com/v1/chat/completions", content);
@@ -40,6 +41,7 @@ public async Task<string> CreateChatCompletionAsync(string systemMessage, string
     if (response.IsSuccessStatusCode)
     {
         string responseContent = await response.Content.ReadAsStringAsync();
+
         return responseContent;
     }
     else

@@ -65,10 +65,11 @@
         try
         {
             Console.WriteLine("OutputText method called");
+             var formattedTemperature = temperature.Replace(',', '.');
             
             var response = await httpClient.PostAsJsonAsync("http://localhost:5000/product-description/generate", new
             {
-                temperature = $"{temperature}",
+                temperature = $"{formattedTemperature}",
                 systemMessage = $"{systemMessage}",
                 userMessage = $"{keywords}"
             });
