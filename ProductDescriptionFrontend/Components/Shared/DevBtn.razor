@@ -3,6 +3,7 @@
 @using System.Net.Http
 @using System.Net.Http.Json
 @using Newtonsoft.Json
+@inject HttpClient httpClient
 
 <div>
     <label for="keywords">Keywords: </label>
@@ -36,13 +37,8 @@
 
 @code {
     private string textToOutput;
-    private HttpClient httpClient;
     private string temperature = "1.0"; // Set a default value for temperature
 
-    protected override void OnInitialized()
-    {
-        httpClient = new HttpClient();
-    }
 
     private string keywords = "";
     private void OnInputEvent(ChangeEventArgs changeEvent)
