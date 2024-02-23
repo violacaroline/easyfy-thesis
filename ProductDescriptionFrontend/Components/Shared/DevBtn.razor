@@ -6,15 +6,21 @@
 @inject HttpClient httpClient
 
 <div>
+    <label for="product-name">Product Name: </label>
+    <br>
+<input class="form-control" id="product-name" type="text" @bind="productName"/>
+</div>
+
+<div>
     <label for="keywords">Keywords: </label>
     <br>
-    <textarea class="form-control" id="keywords" type="text" @bind="keywords" @oninput="OnInputEvent"></textarea>
+    <textarea class="form-control" id="keywords" type="text" @bind="keywords" ></textarea>
 </div>
 
 <div>
     <label for="systemMessage">systemMessage: </label>
     <br>
-    <textarea class="form-control"  id="systemMessage" type="text" @bind="systemMessage" @oninput="OnSystemInputEvent"></textarea>
+    <textarea class="form-control"  id="systemMessage" type="text" @bind="systemMessage" ></textarea>
 </div>
 
 <div>
@@ -39,18 +45,26 @@
     private string textToOutput;
     private string temperature = "1.0"; // Set a default value for temperature
 
+private string productName = "";
+private string systemMessage = "";
 
     private string keywords = "";
-    private void OnInputEvent(ChangeEventArgs changeEvent)
+   private void OnChangeEvent(ChangeEventArgs changeEvent, string propertyName)
+{
+    var value = (string)changeEvent.Value;
+    if (propertyName == "keywords")
     {
-        keywords = (string)changeEvent.Value;
+        keywords = value;
     }
-
-    private string systemMessage = "";
-    private void OnSystemInputEvent(ChangeEventArgs changeEvent)
+    else if (propertyName == "productName")
     {
-        systemMessage = (string)changeEvent.Value;
+        productName = value;
     }
+    else if (propertyName == "systemMessage")
+    {
+        productName = value;
+    }
+}
 
     /// <summary>
     /// Makes request to generate description.
@@ -67,7 +81,7 @@
             {
                 temperature = $"{formattedTemperature}",
                 systemMessage = $"{systemMessage}",
-                userMessage = $"{keywords}"
+                userMessage = $"\"\"\"{productName}\"\"\"{keywords}"
             });
 
             if (response.IsSuccessStatusCode)

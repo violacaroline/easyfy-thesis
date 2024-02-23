@@ -13,7 +13,7 @@
 <input class="form-control" id="product-name" type="text" @bind="productName"/>
 </div>
 <div>
-    <label for="keywords">Keywords: </label>
+    <label for="keywords">Product Attributes: </label>
     <br>
     <textarea class="form-control" id="keywords" @bind="keywords"></textarea>
 </div>
@@ -56,7 +56,6 @@
     try
     {
         Console.WriteLine("OutputText method called");
-        Console.WriteLine($"\"\"\"{productName}\"\"\"{keywords}");
     
         var response = await httpClient.PostAsJsonAsync("http://localhost:5000/product-description/generate", new
         {
