@@ -3,24 +3,14 @@
 @using System.Net.Http
 @using System.Net.Http.Json
 @using Newtonsoft.Json
-@inject HttpClient httpClient
+@using ProductDescriptionFrontend.Components.Shared
+@inject ProductDescriptionService ProductDescriptionService
+
 
 <div>
-    <label for="product-name">Product Name: </label>
-    <br>
-<input class="form-control" id="product-name" type="text" @bind="productName"/>
-</div>
-
-<div>
-    <label for="keywords">Keywords: </label>
-    <br>
-    <textarea class="form-control" id="keywords" type="text" @bind="keywords" ></textarea>
-</div>
-
-<div>
-    <label for="systemMessage">systemMessage: </label>
-    <br>
-    <textarea class="form-control"  id="systemMessage" type="text" @bind="systemMessage" ></textarea>
+    <TextInput Label="Product Name:" @bind-Value="productName" />
+    <TextArea Label="Product Attributes:" @bind-Value="keywords" />
+    <TextArea Label="systemMessage:" @bind-Value="systemMessage" />
 </div>
 
 <div>
@@ -70,35 +60,8 @@ private string systemMessage = "";
     /// Makes request to generate description.
     /// </summary>
     /// <returns></returns>
-    private async Task OutputText()
+     private async Task OutputText()
     {
-        try
-        {
-            Console.WriteLine("OutputText method called");
-             var formattedTemperature = temperature.Replace(',', '.');
-            
-            var response = await httpClient.PostAsJsonAsync("http://localhost:5000/product-description/generate", new
-            {
-                temperature = $"{formattedTemperature}",
-                systemMessage = $"{systemMessage}",
-                userMessage = $"\"\"\"{productName}\"\"\"{keywords}"
-            });
-
-            if (response.IsSuccessStatusCode)
-            {
-                textToOutput = await response.Content.ReadAsStringAsync();
-            }
-            else
-            {
-                var errorContent = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"Error content: {errorContent}");
-                textToOutput = "Error: " + response.ReasonPhrase + " - " + errorContent;
-            }
-        }
-        catch (HttpRequestException ex)
-        {
-            Console.WriteLine($"Error: {ex.Message}");
-                textToOutput = "Request failed: " + ex.Message;
-        }
+        textToOutput = await ProductDescriptionService.GenerateProductDescriptionAsync(productName, keywords, systemMessage, temperature);
     }
 }

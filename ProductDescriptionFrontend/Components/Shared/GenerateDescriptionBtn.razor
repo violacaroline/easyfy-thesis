@@ -1,22 +1,16 @@
-
 @rendermode InteractiveServer
 @using ProductDescriptionFrontend
 @using System.Net.Http
 @using System.Net.Http.Json
 @using Newtonsoft.Json
-@inject HttpClient httpClient
-
+@using ProductDescriptionFrontend.Components.Shared
+@inject ProductDescriptionService ProductDescriptionService
 
 <div>
-    <label for="product-name">Product Name: </label>
-    <br>
-<input class="form-control" id="product-name" type="text" @bind="productName"/>
+    <TextInput Label="Product Name:" @bind-Value="productName" />
+    <TextArea Label="Product Attributes:" @bind-Value="keywords" />
 </div>
-<div>
-    <label for="keywords">Product Attributes: </label>
-    <br>
-    <textarea class="form-control" id="keywords" @bind="keywords"></textarea>
-</div>
+
 <br>
 
 <div>
@@ -24,61 +18,19 @@
     <p role="status">@textToOutput</p>
 </div>
 
-
 @code {
     private string textToOutput;
+    private string keywords;
+    private string productName;
 
-    private string keywords = "";
-   
-    private string productName = "";
-   private void OnChangeEvent(ChangeEventArgs changeEvent, string propertyName)
-{
-    var value = (string)changeEvent.Value;
-    if (propertyName == "keywords")
-    {
-        keywords = value;
-    }
-    else if (propertyName == "productName")
-    {
-        productName = value;
-    }
-}
-
-
-    private readonly  string systemMessage = "You will be provided with a product name delimited by triple quotes and word seeds that you will use to generate the description to the product. The description should follow the following constraints: it should not be longer than 5 sentences, it should be compelling, it should be written in Swedish";
+    private static readonly string systemMessage = "You will be provided with a product name delimited by triple quotes and word seeds that you will use to generate the description to the product. The description should follow the following constraints: it should not be longer than 5 sentences, it should be compelling, it should be written in Swedish";
 
     /// <summary>
     /// Makes request to generate description.
     /// </summary>
     /// <returns></returns>
-   private async Task OutputText()
-{
-    try
+    private async Task OutputText()
     {
-        Console.WriteLine("OutputText method called");
-    
-        var response = await httpClient.PostAsJsonAsync("http://localhost:5000/product-description/generate", new
-        {
-            systemMessage = $"{systemMessage}",
-            userMessage = $"\"\"\"{productName}\"\"\"{keywords}"
-        });
-
-        if (response.IsSuccessStatusCode)
-        {
-            textToOutput = await response.Content.ReadAsStringAsync();
-        }
-        else
-        {
-            var errorContent = await response.Content.ReadAsStringAsync();
-            Console.WriteLine($"Error content: {errorContent}");
-            textToOutput = "Error: " + response.ReasonPhrase + " - " + errorContent;
-        }
+        textToOutput = await ProductDescriptionService.GenerateProductDescriptionAsync(productName, keywords, systemMessage);
     }
-    catch (HttpRequestException ex)
-    {
-        Console.WriteLine($"Error: {ex.Message}");
-            textToOutput = "Request failed: " + ex.Message;
-    }
-}
-
 }
