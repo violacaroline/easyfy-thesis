@@ -6,11 +6,10 @@
 @using ProductDescriptionFrontend.Components.Shared
 @inject ProductDescriptionService ProductDescriptionService
 
-
 <div>
     <TextInput Label="Product Name:" @bind-Value="productName" />
     <TextArea Label="Product Attributes:" @bind-Value="keywords" />
-    <TextArea Label="systemMessage:" @bind-Value="systemMessage" />
+    <TextArea Label="System Message:" @bind-Value="systemMessage" />
 </div>
 
 <div>
@@ -28,40 +27,31 @@
 
 <div>
     <button @onclick="OutputText">Generate Description</button>
-    <p role="status">@textToOutput</p>
+    <LoadingSpinner IsVisible="@isLoading" />
+    @if (!isLoading)
+    {
+        <p role="status">@textToOutput</p>
+    }
 </div>
 
 @code {
-    private string textToOutput;
+    private string? textToOutput;
     private string temperature = "1.0"; // Set a default value for temperature
-
-private string productName = "";
-private string systemMessage = "";
-
+    private string productName = "";
+    private string systemMessage = "";
     private string keywords = "";
-   private void OnChangeEvent(ChangeEventArgs changeEvent, string propertyName)
-{
-    var value = (string)changeEvent.Value;
-    if (propertyName == "keywords")
-    {
-        keywords = value;
-    }
-    else if (propertyName == "productName")
-    {
-        productName = value;
-    }
-    else if (propertyName == "systemMessage")
-    {
-        productName = value;
-    }
-}
+    private bool isLoading = false;
 
-    /// <summary>
-    /// Makes request to generate description.
-    /// </summary>
-    /// <returns></returns>
-     private async Task OutputText()
+    private async Task OutputText()
     {
-        textToOutput = await ProductDescriptionService.GenerateProductDescriptionAsync(productName, keywords, systemMessage, temperature);
+        isLoading = true;
+        try
+        {
+            textToOutput = await ProductDescriptionService.GenerateProductDescriptionAsync(productName, keywords, systemMessage, temperature);
+        }
+        finally
+        {
+            isLoading = false;
+        }
     }
 }
