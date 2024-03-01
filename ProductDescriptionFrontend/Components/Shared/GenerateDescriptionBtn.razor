@@ -4,10 +4,11 @@
 @using Newtonsoft.Json
 @inject ProductDescriptionService ProductDescriptionService
 
+
 <div>
+    <p>Current Temperature: @temperature</p>
     <TextInput Label="Product Name:" @bind-Value="productName" />
     <TextArea Label="Product Attributes:" @bind-Value="keywords" />
-    <!-- Consider adding UI for setting temperature if needed -->
 </div>
 
 <br>
@@ -21,12 +22,13 @@
     }
 </div>
 
+
 @code {
     private string? textToOutput;
-    private string? keywords;
-    private string? productName;
+    private string? keywords = "fuktgivande, nattkräm, antioxidanter, näring, omsorg, hjortronfröextrakt, hyaluronsyra, arktiskt källvatten";
+    private string? productName = "Lumene Valo Overnight Bright Sleeping Cream";
     private bool isLoading = false;
-    private string temperature = "0.7"; // Default value or make this user-definable
+    private string temperature = "1.5"; 
 
     private static readonly string systemMessage = "You will be provided with a product name delimited by triple quotes and word seeds that you will use to generate the description to the product. The description should follow the following constraints: it should not be longer than 5 sentences, it should be compelling, it should be written in Swedish";
 

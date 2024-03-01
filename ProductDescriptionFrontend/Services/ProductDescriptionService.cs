@@ -13,11 +13,18 @@ public class ProductDescriptionService
         _httpClient = httpClient;
     }
 
-    public async Task<string> GenerateProductDescriptionAsync(string productName, string keywords, string systemMessage, string temperature = "0.7")
+    public async Task<string> GenerateProductDescriptionAsync(string productName, string keywords, string systemMessage, string temperature)
     {
         try
         {
             var formattedTemperature = temperature.Replace(',', '.');
+
+            Console.WriteLine($"----------------------------------------------");
+            Console.WriteLine($"Formatted Temperature: {formattedTemperature}");
+            Console.WriteLine($"SystemMessage: {systemMessage}");
+            Console.WriteLine($"UserMessage: {$"\"\"\"{productName}\"\"\"\nseedWords: {keywords}"}");
+
+            Console.WriteLine($"----------------------------------------------");
             var response = await _httpClient.PostAsJsonAsync("http://localhost:5000/product-description/generate", new
             {
                 temperature = formattedTemperature,

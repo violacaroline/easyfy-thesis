@@ -16,7 +16,7 @@ public class OpenAIService
         _apiKey = settings.ApiKey ?? throw new ArgumentNullException(nameof(settings.ApiKey));
         _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
     }
-public async Task<string> CreateChatCompletionAsync(string systemMessage, string userMessage, double temperature = 0.7)
+public async Task<string> CreateChatCompletionAsync(string systemMessage, string userMessage, double temperature)
 {
     var requestBody = new
     {
@@ -30,7 +30,9 @@ public async Task<string> CreateChatCompletionAsync(string systemMessage, string
         n = 1
     };
 
-
+    Console.WriteLine($"----------------------------------------------");
+    Console.WriteLine($"request.temperature:{requestBody.temperature}");
+    Console.WriteLine($"----------------------------------------------");
 
     string jsonContent = JsonConvert.SerializeObject(requestBody);
 
