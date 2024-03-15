@@ -1,0 +1,24 @@
+@using ProductDescriptionFrontend.Components.Pages
+
+<label for="@Id">@Label</label>
+<input class="form-control" id="@Id" value="@Value" @oninput="HandleInput" />
+
+@code {
+    [Parameter]
+    public string? Label { get; set; }
+
+    [Parameter]
+    public string? Value { get; set; }
+
+    [Parameter]
+    public EventCallback<string> ValueChanged { get; set; }
+
+    [Parameter]
+    public string? Id { get; set; } = Guid.NewGuid().ToString();
+
+    private void HandleInput(ChangeEventArgs e)
+    {
+        Value = e.Value?.ToString()?? string.Empty;
+        ValueChanged.InvokeAsync(Value);
+    }
+}
