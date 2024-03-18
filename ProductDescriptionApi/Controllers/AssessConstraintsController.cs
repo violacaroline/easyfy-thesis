@@ -2,19 +2,19 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using ProductDescriptionApi.Models;
 using ProductDescriptionApi.Services;
-using System.Threading.Tasks;
-
 namespace ProductDescriptionApi.Controllers;
 
 [ApiController]
-[Route("language-asses")]
-public class AssessLanguageController : ControllerBase
+[Route("constraints-assess")]
+
+public class AssessConstraintsController : ControllerBase
+
 {
-  private readonly OpenAIService _openAIApiService;
+ private readonly OpenAIService _openAIApiService;
   private readonly CsvHandler _csvHandler;
 
   // Constructor injection of OpenAIApiService
-  public AssessLanguageController(OpenAIService openAIApiService, CsvHandler csvHandler)
+  public AssessConstraintsController(OpenAIService openAIApiService, CsvHandler csvHandler)
   {
     _openAIApiService = openAIApiService;
     _csvHandler = csvHandler;
@@ -23,40 +23,34 @@ public class AssessLanguageController : ControllerBase
   [HttpGet]
   public IActionResult Get()
   {
-    var response = new { Message = "Hello! here can you assess your texts" };
-    var descriptions = _csvHandler.ReadDescriptionsFromCSV("to_assess_language_description.csv");
-    Console.WriteLine("description");
-    foreach (var description in descriptions)
-    {
-      Console.WriteLine(description);
-    }
+    var response = new { Message = "Hello! here can you assess your texts constraints" };
     return Ok(response);
   }
-
 
   [HttpPost("assess")]
   public async Task<IActionResult> AssessDescriptions()
   {
     {
-      var filePath = "generated_description.csv";
-      var descriptions = ReadDescriptions(filePath);
+      var filePath = "to_assess_constraints_descriptions.csv";
+    //   var descriptions = ReadDescriptions(filePath);
+    _csvHandler.ReadDescriptionsAndAttributesFromCSV(filePath);
 
-      for (int i = 0; i < descriptions.Count; i++)
-      {
-        var response = await AssessDescriptionAsync(descriptions[i]);
-        if (response == null) continue; // Decide how to handle null responses.
+    //   for (int i = 0; i < descriptions.Count; i++)
+    //   {
+    //     var response = await AssessDescriptionAsync(descriptions[i]);
+    //     if (response == null) continue; // Decide how to handle null responses.
 
-        var messageContent = ParseApiResponse(response);
-        Console.WriteLine(messageContent);
-        if ($"{messageContent.ToLower()}" == "correct")
-        {
-          WriteAssessedDescriptionToCSV("Correct", "assessed_language_results.csv");
-        }
-        else
-        {
-          WriteAssessedDescriptionToCSV("Wrong", "assessed_language_results.csv");
-        }
-      }
+    //     var messageContent = ParseApiResponse(response);
+    //     Console.WriteLine(messageContent);
+    //     if ($"{messageContent.ToLower()}" == "correct")
+    //     {
+    //       WriteAssessedDescriptionToCSV("Correct", "assessed_description.csv");
+    //     }
+    //     else
+    //     {
+    //       WriteAssessedDescriptionToCSV("Wrong", "assessed_description.csv");
+    //     }
+    //   }
 
       return Ok();
     }
@@ -78,7 +72,7 @@ public class AssessLanguageController : ControllerBase
 
   private async Task<string> AssessDescriptionAsync(string description)
   {
-    string systemMessage = "Följande text kan ha stavfel, grammatiska fel eller fel med skiljetecken. Returnera endast den rättade texten utan kommentarer eller andra tillägg. Behåll texten som den är om den är korrekt. Skriv \"correct\" när du behåller texten.";
+    string systemMessage = "Jag skulle vilja veta om texten är skriven på svenska. Sedan, innehåller texten specifika ord och fraser. Skulle du kunna kontrollera texten punkt för punkt mot följande lista? Returnera endast \"correct\" när texten innehåller allt, och skriv vilka som saknas utan kommentarer eller andra tillägg.";
     double temperature = 1;
     try
     {
@@ -118,6 +112,5 @@ public class AssessLanguageController : ControllerBase
       throw;
     }
   }
-
 
 }

@@ -29,7 +29,8 @@ public class ProductDescriptionService
             {
                 temperature = formattedTemperature,
                 systemMessage = systemMessage,
-                userMessage = $"\"\"\"{productName}\"\"\"{keywords}"
+                userMessage = $"\"\"\"{productName}\"\"\"{keywords}",
+                attributes = keywords
             });
 
             if (response.IsSuccessStatusCode)

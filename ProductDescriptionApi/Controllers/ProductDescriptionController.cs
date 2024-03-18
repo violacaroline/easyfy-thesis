@@ -32,9 +32,10 @@ public class ProductDescriptionController : ControllerBase
         // Ensure that the request parameters are not null
         string systemMessage = request.SystemMessage ?? "string";
         string userMessage = request.UserMessage ?? "Default User Message";
-        string Temp = request.Temperature ?? "0.7";
+        string temp = request.Temperature ?? "0.7";
+        string attributes = request.Attributes ?? "";
 
-        double Temperature = double.Parse(Temp);
+        double Temperature = double.Parse(temp);
         // Call the OpenAI service with the system message and the user message
         string response = await _openAIApiService.CreateChatCompletionAsync(systemMessage, userMessage, Temperature);
 
@@ -45,7 +46,8 @@ public class ProductDescriptionController : ControllerBase
 
         
         // Write the response to a CSV file
-        WriteToCSV(messageContent, "generated_description.csv");
+        WriteToCSV(messageContent, "to_assess_language_descriptions.csv");
+        WriteToCSV($"{messageContent}----{attributes}", "to_assess_constraints_descriptions.csv");
 
         // Return only the message content
         return Ok(messageContent);
