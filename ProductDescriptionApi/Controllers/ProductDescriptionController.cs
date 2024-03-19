@@ -46,8 +46,8 @@ public class ProductDescriptionController : ControllerBase
 
         
         // Write the response to a CSV file
-        WriteToCSV(messageContent, "to_assess_language_descriptions.csv");
-        WriteToCSV($"{messageContent}----{attributes}", "to_assess_constraints_descriptions.csv");
+        WriteToCSV(messageContent, "assessment_data/assessment_input/to_assess_language_descriptions.csv");
+        WriteToCSV($"{messageContent}----{attributes}", "assessment_data/assessment_input/to_assess_constraints_descriptions.csv");
 
         // Return only the message content
         return Ok(messageContent);

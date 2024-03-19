@@ -46,21 +46,11 @@ namespace ProductDescriptionApi.Services
                     if (parts?.Length == 2) // Ensure there's both a description and attributes part
                     {
                         string description = parts[0].Trim();
-                        List<string> attributes = new List<string>(parts[1].Split(new string[] { ", " }, StringSplitOptions.RemoveEmptyEntries));
+                        // List<string> attributes = new List<string>(parts[1].Split(new string[] { ", " }, StringSplitOptions.RemoveEmptyEntries));
+                        string attributes = parts[1].Trim();
                         descriptionsAndAttributes.Add(new ProductDescription(description, attributes));
                     }
                 }
-            }
-
-            foreach (var item in descriptionsAndAttributes)
-            {
-                Console.WriteLine($"Description: {item.Description}");
-                Console.WriteLine("Attributes:");
-                foreach (var attribute in item.Attributes)
-                {
-                    Console.WriteLine($"- {attribute}");
-                }
-                Console.WriteLine(); // Blank line for better readability
             }
 
             return descriptionsAndAttributes;
@@ -77,9 +67,9 @@ namespace ProductDescriptionApi.Services
     public class ProductDescription
     {
         public string Description { get; set; }
-        public List<string> Attributes { get; set; }
+        public string Attributes { get; set; }
 
-        public ProductDescription(string description, List<string> attributes)
+        public ProductDescription(string description, string attributes)
         {
             Description = description;
             Attributes = attributes;

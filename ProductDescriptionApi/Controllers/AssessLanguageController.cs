@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace ProductDescriptionApi.Controllers;
 
 [ApiController]
-[Route("language-asses")]
+[Route("language-assess")]
 public class AssessLanguageController : ControllerBase
 {
   private readonly OpenAIService _openAIApiService;
@@ -24,7 +24,7 @@ public class AssessLanguageController : ControllerBase
   public IActionResult Get()
   {
     var response = new { Message = "Hello! here can you assess your texts" };
-    var descriptions = _csvHandler.ReadDescriptionsFromCSV("to_assess_language_description.csv");
+    var descriptions = _csvHandler.ReadDescriptionsFromCSV("assessment_data/assessment_input/to_assess_language_description.csv");
     Console.WriteLine("description");
     foreach (var description in descriptions)
     {
@@ -50,11 +50,11 @@ public class AssessLanguageController : ControllerBase
         Console.WriteLine(messageContent);
         if ($"{messageContent.ToLower()}" == "correct")
         {
-          WriteAssessedDescriptionToCSV("Correct", "assessed_language_results.csv");
+          WriteAssessedDescriptionToCSV("Correct", "assessment_data/assessment_results/assessed_language_results.csv");
         }
         else
         {
-          WriteAssessedDescriptionToCSV("Wrong", "assessed_language_results.csv");
+          WriteAssessedDescriptionToCSV("Wrong", "assessment_data/assessment_results/assessed_language_results.csv");
         }
       }
 
