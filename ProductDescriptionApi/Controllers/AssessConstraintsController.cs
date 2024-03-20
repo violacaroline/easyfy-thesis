@@ -71,13 +71,13 @@ public class AssessConstraintsController : ControllerBase
 
   private async Task<string> AssessDescriptionAsync(ProductDescription productInfo)
   {
-    string systemMessage = "Jag skulle vilja veta om texten är skriven på svenska. Sedan, innehåller texten specifika ord och fraser. Skulle du kunna kontrollera texten punkt för punkt mot följande lista? Returnera endast \"correct\" när texten innehåller allt, och skriv vilka som saknas utan kommentarer eller andra tillägg.";
+    string systemMessage = $"Kontrollera om följande text innehåller alla dessa punkter: [{productInfo.Attributes}].Returnera endast \'correct\' om texten innehåller allt som finns i listan utan att ge några ytterligare kommentarer eller detaljer, returnera endast \"incorrect\" om texten saknar en eller flera av det som finns i listan utan att ge några ytterligare kommentarer eller detaljer.";
     double temperature = 1;
     try
     {
 
-      string prompt = $"Lista: {productInfo.Attributes} Text: {productInfo.Description}";
-      Console.WriteLine($"Prompt:  {prompt}");
+      string prompt = $"Text: {productInfo.Description}";
+      Console.WriteLine($"Prompt: {prompt}");
 
       return await _openAIApiService.CreateChatCompletionAsync(systemMessage, prompt, temperature);
     }
