@@ -38,7 +38,7 @@ public class AssessLanguageController : ControllerBase
   public async Task<IActionResult> AssessDescriptions()
   {
     {
-      var filePath = "generated_description.csv";
+      var filePath = "assessment_data/assessment_input/to_assess_language_descriptions.csv";
       var descriptions = ReadDescriptions(filePath);
 
       for (int i = 0; i < descriptions.Count; i++)
@@ -78,7 +78,7 @@ public class AssessLanguageController : ControllerBase
 
   private async Task<string> AssessDescriptionAsync(string description)
   {
-    string systemMessage = "Följande text kan ha stavfel, grammatiska fel eller fel med skiljetecken. Returnera endast den rättade texten utan kommentarer eller andra tillägg. Behåll texten som den är om den är korrekt. Skriv \"correct\" när du behåller texten.";
+    string systemMessage = "Följande text kan ha stavfel, grammatiska fel eller fel med skiljetecken. Returnera endast \"Incorrect\" om texten behöver rättas utan kommentarer eller andra tillägg. Skriv  endast \"correct\"  om texten är korrekt.";
     double temperature = 1;
     try
     {
