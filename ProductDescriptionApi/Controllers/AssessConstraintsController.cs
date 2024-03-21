@@ -41,8 +41,7 @@ public class AssessConstraintsController : ControllerBase
           if (response == null) continue; // Decide how to handle null responses.
 
           var messageContent = ParseApiResponse(response);
-          Console.WriteLine($"Message content chatgpt: , {messageContent}");
-          if ($"{messageContent.ToLower()}" == "correct")
+          if (messageContent.Contains("correct", StringComparison.OrdinalIgnoreCase))
           {
             WriteAssessedDescriptionToCSV("Correct", "assessment_data/assessment_results/assessed_constraints_results.csv");
           }

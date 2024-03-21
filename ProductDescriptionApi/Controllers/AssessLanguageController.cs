@@ -48,7 +48,7 @@ public class AssessLanguageController : ControllerBase
 
         var messageContent = ParseApiResponse(response);
         Console.WriteLine(messageContent);
-        if ($"{messageContent.ToLower()}" == "correct")
+        if (messageContent.Contains("correct", StringComparison.OrdinalIgnoreCase))
         {
           WriteAssessedDescriptionToCSV("Correct", "assessment_data/assessment_results/assessed_language_results.csv");
         }
