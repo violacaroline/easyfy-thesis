@@ -50,11 +50,11 @@ public class AssessLanguageController : ControllerBase
         Console.WriteLine(messageContent);
         if (messageContent.Contains("correct", StringComparison.OrdinalIgnoreCase))
         {
-          WriteAssessedDescriptionToCSV("Correct", "assessment_data/assessment_results/assessed_language_results.csv");
+          WriteAssessedDescriptionToCSV("Correct", "assessment_data/assessment_results/assessed_language_results.csv", i);
         }
         else
         {
-          WriteAssessedDescriptionToCSV("Wrong", "assessment_data/assessment_results/assessed_language_results.csv");
+          WriteAssessedDescriptionToCSV("Wrong", "assessment_data/assessment_results/assessed_language_results.csv", i);
         }
       }
 
@@ -106,11 +106,11 @@ public class AssessLanguageController : ControllerBase
     }
   }
 
-  private void WriteAssessedDescriptionToCSV(string messageContent, string filePath)
+  private void WriteAssessedDescriptionToCSV(string messageContent, string filePath, int productNumber)
   {
     try
     {
-      _csvHandler.WriteToCSV(messageContent, filePath);
+      _csvHandler.WriteToCSV(messageContent, filePath, productNumber);
     }
     catch (Exception ex)
     {

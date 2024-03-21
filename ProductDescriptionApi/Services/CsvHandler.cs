@@ -56,11 +56,12 @@ namespace ProductDescriptionApi.Services
             return descriptionsAndAttributes;
         }
 
-        public void WriteToCSV(string text, string filePath)
+        public void WriteToCSV(string text, string filePath, int productNumber)
         {
             // Write the text to a CSV file (append mode)
             using var writer = new StreamWriter(filePath, append: true);
-            writer.WriteLine(text);
+           
+             writer.WriteLine($"{productNumber};{text}");
         }
     }
 

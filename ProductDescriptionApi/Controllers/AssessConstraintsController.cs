@@ -43,11 +43,11 @@ public class AssessConstraintsController : ControllerBase
           var messageContent = ParseApiResponse(response);
           if (messageContent.Contains("correct", StringComparison.OrdinalIgnoreCase))
           {
-            WriteAssessedDescriptionToCSV("Correct", "assessment_data/assessment_results/assessed_constraints_results.csv");
+            WriteAssessedDescriptionToCSV("Correct", "assessment_data/assessment_results/assessed_constraints_results.csv", i);
           }
           else
           {
-            WriteAssessedDescriptionToCSV("Wrong", "assessment_data/assessment_results/assessed_constraints_results.csv");
+            WriteAssessedDescriptionToCSV("Wrong", "assessment_data/assessment_results/assessed_constraints_results.csv", i);
           }
         }
 
@@ -101,11 +101,11 @@ public class AssessConstraintsController : ControllerBase
     }
   }
 
-  private void WriteAssessedDescriptionToCSV(string messageContent, string filePath)
+  private void WriteAssessedDescriptionToCSV(string messageContent, string filePath, int productNumber)
   {
     try
     {
-      _csvHandler.WriteToCSV(messageContent, filePath);
+      _csvHandler.WriteToCSV(messageContent, filePath, productNumber);
     }
     catch (Exception ex)
     {
