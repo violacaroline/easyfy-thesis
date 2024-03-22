@@ -10,14 +10,20 @@ namespace ProductDescriptionApi.Controllers;
 [Route("language-assess")]
 public class AssessLanguageController : ControllerBase
 {
+    private readonly string _inputFilePath;
+  private readonly string _resultsFilePath;
+  private readonly IConfiguration _configuration;
   private readonly OpenAIService _openAIApiService;
   private readonly CsvHandler _csvHandler;
 
   // Constructor injection of OpenAIApiService
-  public AssessLanguageController(OpenAIService openAIApiService, CsvHandler csvHandler)
+  public AssessLanguageController(IConfiguration configuration,OpenAIService openAIApiService, CsvHandler csvHandler)
   {
+     _configuration = configuration;
     _openAIApiService = openAIApiService;
     _csvHandler = csvHandler;
+    _inputFilePath = _configuration["InputFilePath:Language"];
+    _resultsFilePath = _configuration["ResultsFilePath:Language"];
   }
 
   [HttpGet]
@@ -38,8 +44,8 @@ public class AssessLanguageController : ControllerBase
   public async Task<IActionResult> AssessDescriptions()
   {
     {
-      var filePath = "assessment_data/assessment_input/to_assess_language_descriptions.csv";
-      var descriptions = ReadDescriptions(filePath);
+      
+      var descriptions = ReadDescriptions(_inputFilePath);
 
       for (int i = 0; i < descriptions.Count; i++)
       {
@@ -50,11 +56,11 @@ public class AssessLanguageController : ControllerBase
         Console.WriteLine(messageContent);
         if (messageContent.Contains("correct", StringComparison.OrdinalIgnoreCase))
         {
-          WriteAssessedDescriptionToCSV("Correct", "assessment_data/assessment_results/assessed_language_results.csv", i);
+          WriteAssessedDescriptionToCSV("Correct", _resultsFilePath, i);
         }
         else
         {
-          WriteAssessedDescriptionToCSV("Wrong", "assessment_data/assessment_results/assessed_language_results.csv", i);
+          WriteAssessedDescriptionToCSV("Wrong", _resultsFilePath, i);
         }
       }
 

@@ -10,14 +10,20 @@ namespace ProductDescriptionApi.Controllers;
 public class AssessConstraintsController : ControllerBase
 
 {
+  private readonly string _inputFilePath;
+  private readonly string _resultsFilePath;
   private readonly OpenAIService _openAIApiService;
   private readonly CsvHandler _csvHandler;
+  private readonly IConfiguration _configuration;
 
   // Constructor injection of OpenAIApiService
-  public AssessConstraintsController(OpenAIService openAIApiService, CsvHandler csvHandler)
+  public AssessConstraintsController(IConfiguration configuration, OpenAIService openAIApiService, CsvHandler csvHandler)
   {
+    _configuration = configuration;
     _openAIApiService = openAIApiService;
     _csvHandler = csvHandler;
+    _inputFilePath = _configuration["InputFilePath:Constraints"];
+    _resultsFilePath = _configuration["ResultsFilePath:Constraints"];
   }
 
   [HttpGet]
@@ -31,9 +37,9 @@ public class AssessConstraintsController : ControllerBase
   public async Task<IActionResult> AssessDescriptions()
   {
     {
-      var filePath = "assessment_data/assessment_input/to_assess_constraints_descriptions.csv";
+      
       //   var descriptions = ReadDescriptions(filePath);
-      List<ProductDescription> descriptionsAndAttributes = _csvHandler.ReadDescriptionsAndAttributesFromCSV(filePath);
+      List<ProductDescription> descriptionsAndAttributes = _csvHandler.ReadDescriptionsAndAttributesFromCSV(_inputFilePath);
 
         for (int i = 0; i < descriptionsAndAttributes.Count; i++)
         {
@@ -43,11 +49,11 @@ public class AssessConstraintsController : ControllerBase
           var messageContent = ParseApiResponse(response);
           if (messageContent.Contains("correct", StringComparison.OrdinalIgnoreCase))
           {
-            WriteAssessedDescriptionToCSV("Correct", "assessment_data/assessment_results/assessed_constraints_results.csv", i);
+            WriteAssessedDescriptionToCSV("Correct", _resultsFilePath, i);
           }
           else
           {
-            WriteAssessedDescriptionToCSV("Wrong", "assessment_data/assessment_results/assessed_constraints_results.csv", i);
+            WriteAssessedDescriptionToCSV("Wrong", _resultsFilePath, i);
           }
         }
 

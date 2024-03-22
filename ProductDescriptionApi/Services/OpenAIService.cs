@@ -20,7 +20,8 @@ public async Task<string> CreateChatCompletionAsync(string systemMessage, string
 {
     var requestBody = new
     {
-        model = "gpt-4-0125-preview", // Use the latest model available to you.
+        // model = "gpt-4-0125-preview", // Use the latest model available to you.
+        model = "gpt-3.5-turbo-0125", // Use the latest model available to you.
         messages = new[]
         {
             new { role = "system", content = systemMessage },
