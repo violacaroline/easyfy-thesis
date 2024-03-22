@@ -37,7 +37,7 @@ public class AssessConstraintsController : ControllerBase
   public async Task<IActionResult> AssessDescriptions()
   {
     {
-      int totalIterations = 3;
+      int totalIterations = 1;
       _csvHandler.InitializeCsvWithHeaders(_resultsFilePath, totalIterations);
 
       // Store results for batch writing: Product Number => List of Results ("Correct" or "Wrong")
@@ -61,14 +61,34 @@ public class AssessConstraintsController : ControllerBase
             batchResults[productNumber + 1].Add(-1);
             continue;
           }
-
+          string GroundTruth = descriptionsAndAttributes[productNumber].Correctness;
           var messageContent = ParseApiResponse(response);
-          if (messageContent.Contains("correct", StringComparison.OrdinalIgnoreCase))
+          Console.WriteLine("-----------------------------");
+          Console.WriteLine("PRODUCTnr: ");
+          Console.WriteLine(productNumber +1);
+          Console.WriteLine("GroundTruth: ");
+          Console.WriteLine(descriptionsAndAttributes[productNumber].Correctness);
+          Console.WriteLine("Chat gpt :");
+          Console.WriteLine(messageContent);
+          Console.WriteLine("-----------------------------");
+          if (messageContent.Contains("correct", StringComparison.OrdinalIgnoreCase) && GroundTruth == "Correct")
           {
+            Console.WriteLine(1);
             batchResults[productNumber + 1].Add(1);
           }
-          else
+          else if (messageContent.Contains("correct", StringComparison.OrdinalIgnoreCase) && GroundTruth == "Wrong")
           {
+            Console.WriteLine(2);
+            batchResults[productNumber + 1].Add(0);
+          }
+          else if (messageContent.Contains("wrong", StringComparison.OrdinalIgnoreCase) && GroundTruth == "Wrong")
+          {
+            Console.WriteLine(3);
+            batchResults[productNumber + 1].Add(1);
+          }
+          else if (messageContent.Contains("wrong", StringComparison.OrdinalIgnoreCase) && GroundTruth == "Correct")
+          {
+            Console.WriteLine(4);
             batchResults[productNumber + 1].Add(0);
           }
         }
@@ -96,7 +116,7 @@ public class AssessConstraintsController : ControllerBase
 
   private async Task<string> AssessDescriptionAsync(ProductDescription productInfo)
   {
-    string systemMessage = $"Kontrollera om följande text innehåller alla dessa punkter: [{productInfo.Attributes}].Returnera endast \'correct\' om texten innehåller allt som finns i listan utan att ge några ytterligare kommentarer eller detaljer, returnera endast \"incorrect\" om texten saknar en eller flera av det som finns i listan utan att ge några ytterligare kommentarer eller detaljer.";
+    string systemMessage = $"Kontrollera om följande text innehåller alla dessa punkter: [{productInfo.Attributes}].Returnera endast \'correct\' om texten innehåller allt som finns i listan utan att ge några ytterligare kommentarer eller detaljer, returnera endast \"wrong\" om texten saknar en eller flera av det som finns i listan utan att ge några ytterligare kommentarer eller detaljer.";
     double temperature = 1;
     try
     {

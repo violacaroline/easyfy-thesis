@@ -36,19 +36,20 @@ namespace ProductDescriptionApi.Services
         {
             List<ProductDescription> descriptionsAndAttributes = new List<ProductDescription>();
 
-            // Read descriptions and attributes from CSV file
+            // Read descriptions, attributes, and correctness from CSV file
             using (var reader = new StreamReader(filePath))
             {
                 while (!reader.EndOfStream)
                 {
                     var line = reader.ReadLine();
+                    // Assuming the format is Description----Attributes----Correctness
                     var parts = line?.Split(new string[] { "----" }, StringSplitOptions.RemoveEmptyEntries);
-                    if (parts?.Length == 2) // Ensure there's both a description and attributes part
+                    if (parts?.Length == 3) // Ensure there's a description, attributes part, and correctness
                     {
                         string description = parts[0].Trim();
-                        // List<string> attributes = new List<string>(parts[1].Split(new string[] { ", " }, StringSplitOptions.RemoveEmptyEntries));
                         string attributes = parts[1].Trim();
-                        descriptionsAndAttributes.Add(new ProductDescription(description, attributes));
+                        string correctness = parts[2].Trim();
+                        descriptionsAndAttributes.Add(new ProductDescription(description, attributes, correctness));
                     }
                 }
             }
@@ -86,11 +87,13 @@ namespace ProductDescriptionApi.Services
     {
         public string Description { get; set; }
         public string Attributes { get; set; }
+        public string Correctness { get; set; }
 
-        public ProductDescription(string description, string attributes)
+        public ProductDescription(string description, string attributes, string correctness)
         {
             Description = description;
             Attributes = attributes;
+            Correctness = correctness;
         }
     }
 
