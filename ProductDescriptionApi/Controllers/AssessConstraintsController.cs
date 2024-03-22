@@ -41,13 +41,13 @@ public class AssessConstraintsController : ControllerBase
       _csvHandler.InitializeCsvWithHeaders(_resultsFilePath, totalIterations);
 
       // Store results for batch writing: Product Number => List of Results ("Correct" or "Wrong")
-      var batchResults = new Dictionary<int, List<string>>();
+      var batchResults = new Dictionary<int, List<int>>();
       //   var descriptions = ReadDescriptions(filePath);
       List<ProductDescription> descriptionsAndAttributes = _csvHandler.ReadDescriptionsAndAttributesFromCSV(_inputFilePath);
       // Prepare the dictionary to hold results for each product
       for (int productNumber = 0; productNumber < descriptionsAndAttributes.Count; productNumber++)
       {
-        batchResults.Add(productNumber + 1, new List<string>());
+        batchResults.Add(productNumber + 1, new List<int>());
       }
       // Assess descriptions across iterations
       for (int iterationNumber = 0; iterationNumber < totalIterations; iterationNumber++)
@@ -58,18 +58,18 @@ public class AssessConstraintsController : ControllerBase
           if (response == null)
           {
             // Decide how to handle null responses. Here, adding "Error" to indicate a failed assessment.
-            batchResults[productNumber + 1].Add("Error");
+            batchResults[productNumber + 1].Add(-1);
             continue;
           }
 
           var messageContent = ParseApiResponse(response);
           if (messageContent.Contains("correct", StringComparison.OrdinalIgnoreCase))
           {
-            batchResults[productNumber + 1].Add("Correct");
+            batchResults[productNumber + 1].Add(1);
           }
           else
           {
-            batchResults[productNumber + 1].Add("Wrong");
+            batchResults[productNumber + 1].Add(0);
           }
         }
       }
@@ -127,7 +127,7 @@ public class AssessConstraintsController : ControllerBase
     }
   }
 
-  private void WriteAssessedDescriptionToCSV(Dictionary<int, List<string>> batchResults)
+  private void WriteAssessedDescriptionToCSV(Dictionary<int, List<int>> batchResults)
   {
     try
     {

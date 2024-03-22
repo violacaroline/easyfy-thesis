@@ -67,7 +67,7 @@ namespace ProductDescriptionApi.Services
             writer.WriteLine();
         }
 
-        public void WriteResultsToCSV(Dictionary<int, List<string>> results, string filePath)
+        public void WriteResultsToCSV(Dictionary<int, List<int>> results, string filePath)
         {
             using var writer = new StreamWriter(filePath, append: true);
             foreach (var result in results)

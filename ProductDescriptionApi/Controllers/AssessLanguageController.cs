@@ -37,32 +37,32 @@ public class AssessLanguageController : ControllerBase
     [HttpPost("assess")]
     public async Task<IActionResult> AssessDescriptions()
     {
-        int totalIterations = 3;
+        int totalIterations = 2;
         _csvHandler.InitializeCsvWithHeaders(_resultsFilePath, totalIterations);
         
         var descriptions = ReadDescriptions(_inputFilePath);
-        var batchResults = new Dictionary<int, List<string>>();
+        var batchResults = new Dictionary<int, List<int>>();
 
         for (int i = 0; i < descriptions.Count; i++)
         {
-            batchResults.Add(i + 1, new List<string>()); // Initialize results list for each product
+            batchResults.Add(i + 1, new List<int>()); // Initialize results list for each product
             for (int iteration = 0; iteration < totalIterations; iteration++)
             {
                 var response = await AssessDescriptionAsync(descriptions[i]);
                 if (response == null)
                 {
-                    batchResults[i + 1].Add("Error"); // Handle null response
+                    batchResults[i + 1].Add(-1); // Handle null response
                     continue;
                 }
 
                 var messageContent = ParseApiResponse(response);
                 if (messageContent.Contains("correct", StringComparison.OrdinalIgnoreCase))
                 {
-                    batchResults[i + 1].Add("Correct");
+                    batchResults[i + 1].Add(1);
                 }
                 else
                 {
-                    batchResults[i + 1].Add("Wrong");
+                    batchResults[i + 1].Add(0);
                 }
             }
         }
