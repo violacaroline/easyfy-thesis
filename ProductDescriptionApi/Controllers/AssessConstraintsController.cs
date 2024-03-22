@@ -37,25 +37,45 @@ public class AssessConstraintsController : ControllerBase
   public async Task<IActionResult> AssessDescriptions()
   {
     {
-      
+      int totalIterations = 3;
+      _csvHandler.InitializeCsvWithHeaders(_resultsFilePath, totalIterations);
+
+      // Store results for batch writing: Product Number => List of Results ("Correct" or "Wrong")
+      var batchResults = new Dictionary<int, List<string>>();
       //   var descriptions = ReadDescriptions(filePath);
       List<ProductDescription> descriptionsAndAttributes = _csvHandler.ReadDescriptionsAndAttributesFromCSV(_inputFilePath);
-
-        for (int i = 0; i < descriptionsAndAttributes.Count; i++)
+      // Prepare the dictionary to hold results for each product
+      for (int productNumber = 0; productNumber < descriptionsAndAttributes.Count; productNumber++)
+      {
+        batchResults.Add(productNumber + 1, new List<string>());
+      }
+      // Assess descriptions across iterations
+      for (int iterationNumber = 0; iterationNumber < totalIterations; iterationNumber++)
+      {
+        for (int productNumber = 0; productNumber < descriptionsAndAttributes.Count; productNumber++)
         {
-          var response = await AssessDescriptionAsync(descriptionsAndAttributes[i]);
-          if (response == null) continue; // Decide how to handle null responses.
+          var response = await AssessDescriptionAsync(descriptionsAndAttributes[productNumber]);
+          if (response == null)
+          {
+            // Decide how to handle null responses. Here, adding "Error" to indicate a failed assessment.
+            batchResults[productNumber + 1].Add("Error");
+            continue;
+          }
 
           var messageContent = ParseApiResponse(response);
           if (messageContent.Contains("correct", StringComparison.OrdinalIgnoreCase))
           {
-            WriteAssessedDescriptionToCSV("Correct", _resultsFilePath, i);
+            batchResults[productNumber + 1].Add("Correct");
           }
           else
           {
-            WriteAssessedDescriptionToCSV("Wrong", _resultsFilePath, i);
+            batchResults[productNumber + 1].Add("Wrong");
           }
         }
+      }
+
+      // Write all results to CSV at once, now that assessments are complete
+      WriteAssessedDescriptionToCSV(batchResults);
 
       return Ok();
     }
@@ -107,11 +127,11 @@ public class AssessConstraintsController : ControllerBase
     }
   }
 
-  private void WriteAssessedDescriptionToCSV(string messageContent, string filePath, int productNumber)
+  private void WriteAssessedDescriptionToCSV(Dictionary<int, List<string>> batchResults)
   {
     try
     {
-      _csvHandler.WriteToCSV(messageContent, filePath, productNumber);
+      _csvHandler.WriteResultsToCSV(batchResults, _resultsFilePath);
     }
     catch (Exception ex)
     {

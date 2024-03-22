@@ -56,12 +56,29 @@ namespace ProductDescriptionApi.Services
             return descriptionsAndAttributes;
         }
 
-        public void WriteToCSV(string text, string filePath, int productNumber)
+        public void InitializeCsvWithHeaders(string filePath, int iterations)
         {
-            // Write the text to a CSV file (append mode)
+            using var writer = new StreamWriter(filePath, append: false);
+            writer.Write("Product Number");
+            for (int i = 1; i <= iterations; i++)
+            {
+                writer.Write($";Iteration {i}");
+            }
+            writer.WriteLine();
+        }
+
+        public void WriteResultsToCSV(Dictionary<int, List<string>> results, string filePath)
+        {
             using var writer = new StreamWriter(filePath, append: true);
-           
-             writer.WriteLine($"{productNumber};{text}");
+            foreach (var result in results)
+            {
+                writer.Write($"{result.Key}"); // Product Number
+                foreach (var assessment in result.Value)
+                {
+                    writer.Write($";{assessment}");
+                }
+                writer.WriteLine();
+            }
         }
     }
 
