@@ -101,18 +101,6 @@ public class AssessConstraintsController : ControllerBase
     }
   }
 
-  private List<string> ReadDescriptions(string filePath)
-  {
-    try
-    {
-      return _csvHandler.ReadDescriptionsFromCSV(filePath);
-    }
-    catch (Exception ex)
-    {
-      Console.WriteLine($"Error reading descriptions from CSV: {ex.Message}");
-      throw;
-    }
-  }
 
   private async Task<string> AssessDescriptionAsync(ProductDescription productInfo)
   {
