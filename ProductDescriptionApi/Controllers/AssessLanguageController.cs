@@ -37,32 +37,59 @@ public class AssessLanguageController : ControllerBase
     [HttpPost("assess")]
     public async Task<IActionResult> AssessDescriptions()
     {
-        int totalIterations = 2;
+        int totalIterations = 1;
         _csvHandler.InitializeCsvWithHeaders(_resultsFilePath, totalIterations);
-        
-        var descriptions = ReadDescriptions(_inputFilePath);
-        var batchResults = new Dictionary<int, List<int>>();
 
-        for (int i = 0; i < descriptions.Count; i++)
+        var batchResults = new Dictionary<int, List<int>>();
+        List<ProductDescription> descriptions = _csvHandler.ReadDescriptionsAndAttributesFromCSV(_inputFilePath);
+        for (int productNumber = 0; productNumber < descriptions.Count; productNumber++)
         {
-            batchResults.Add(i + 1, new List<int>()); // Initialize results list for each product
-            for (int iteration = 0; iteration < totalIterations; iteration++)
+            batchResults.Add(productNumber + 1, new List<int>());
+        }
+
+        for (int iterationNumber = 0; iterationNumber < totalIterations; iterationNumber++)
+        {
+            for (int productNumber = 0; productNumber < descriptions.Count; productNumber++)
             {
-                var response = await AssessDescriptionAsync(descriptions[i]);
+                var response = await AssessDescriptionAsync(descriptions[productNumber]);
                 if (response == null)
                 {
-                    batchResults[i + 1].Add(-1); // Handle null response
+                    batchResults[productNumber + 1].Add(-1);
                     continue;
                 }
 
+                string GroundTruth = descriptions[productNumber].Correctness;
+
                 var messageContent = ParseApiResponse(response);
-                if (messageContent.Contains("correct", StringComparison.OrdinalIgnoreCase))
+
+                Console.WriteLine("-----------------------------");
+                Console.WriteLine("PRODUCTnr: ");
+                Console.WriteLine(productNumber + 1);
+                Console.WriteLine("GroundTruth: ");
+                Console.WriteLine(descriptions[productNumber].Correctness);
+                Console.WriteLine("Chat gpt :");
+                Console.WriteLine(messageContent);
+                Console.WriteLine("-----------------------------");
+
+                if (messageContent.Contains("correct", StringComparison.OrdinalIgnoreCase) && GroundTruth == "Correct")
                 {
-                    batchResults[i + 1].Add(1);
+                    Console.WriteLine(1);
+                    batchResults[productNumber + 1].Add(1);
                 }
-                else
+                else if (messageContent.Contains("correct", StringComparison.OrdinalIgnoreCase) && GroundTruth == "Wrong")
                 {
-                    batchResults[i + 1].Add(0);
+                    Console.WriteLine(2);
+                    batchResults[productNumber + 1].Add(0);
+                }
+                else if (messageContent.Contains("wrong", StringComparison.OrdinalIgnoreCase) && GroundTruth == "Wrong")
+                {
+                    Console.WriteLine(3);
+                    batchResults[productNumber + 1].Add(1);
+                }
+                else if (messageContent.Contains("wrong", StringComparison.OrdinalIgnoreCase) && GroundTruth == "Correct")
+                {
+                    Console.WriteLine(4);
+                    batchResults[productNumber + 1].Add(0);
                 }
             }
         }
@@ -73,26 +100,14 @@ public class AssessLanguageController : ControllerBase
         return Ok();
     }
 
-    private List<string> ReadDescriptions(string filePath)
-    {
-        try
-        {
-            return _csvHandler.ReadDescriptionsFromCSV(filePath);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error reading descriptions from CSV: {ex.Message}");
-            throw;
-        }
-    }
 
-    private async Task<string> AssessDescriptionAsync(string description)
+    private async Task<string> AssessDescriptionAsync(ProductDescription productInfo)
     {
-        string systemMessage = "Assess if the following text contains any spelling, grammatical, or punctuation errors. Only return 'Incorrect' if the text needs corrections, and 'correct' if the text is correct.";
+        string systemMessage = "Assess if the following text contains any spelling, grammatical, or punctuation errors. Only return 'Wrong' if the text needs corrections, and 'correct' if the text is correct.";
         double temperature = 1;
         try
         {
-            return await _openAIApiService.CreateChatCompletionAsync(systemMessage, description, temperature);
+            return await _openAIApiService.CreateChatCompletionAsync(systemMessage, productInfo.Description, temperature);
         }
         catch (Exception ex)
         {

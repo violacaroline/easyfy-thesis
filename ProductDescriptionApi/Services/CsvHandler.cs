@@ -8,30 +8,6 @@ namespace ProductDescriptionApi.Services
     public class CsvHandler
     {
 
-        public List<string> ReadDescriptionsFromCSV(string filePath)
-        {
-            List<string> descriptions = new List<string>();
-
-            // Read descriptions from CSV file
-            using (var reader = new StreamReader(filePath))
-            {
-
-
-                // Read each line and extract description
-                while (!reader.EndOfStream)
-                {
-                    var line = reader.ReadLine();
-                    var values = line?.Split('\n');
-                    if (values?.Length > 0)
-                    {
-                        string description = values[0].Trim();
-                        descriptions.Add(description);
-                    }
-                }
-            }
-
-            return descriptions;
-        }
         public List<ProductDescription> ReadDescriptionsAndAttributesFromCSV(string filePath)
         {
             List<ProductDescription> descriptionsAndAttributes = new List<ProductDescription>();
@@ -44,6 +20,12 @@ namespace ProductDescriptionApi.Services
                     var line = reader.ReadLine();
                     // Assuming the format is Description----Attributes----Correctness
                     var parts = line?.Split(new string[] { "----" }, StringSplitOptions.RemoveEmptyEntries);
+                    if (parts?.Length == 2) // Ensure there's a description, attributes part, and correctness
+                    {
+                        string description = parts[0].Trim();
+                        string correctness = parts[1].Trim();
+                        descriptionsAndAttributes.Add(new ProductDescription(description, correctness));
+                    }
                     if (parts?.Length == 3) // Ensure there's a description, attributes part, and correctness
                     {
                         string description = parts[0].Trim();
@@ -86,8 +68,13 @@ namespace ProductDescriptionApi.Services
     public class ProductDescription
     {
         public string Description { get; set; }
-        public string Attributes { get; set; }
+        public string? Attributes { get; set; }
         public string Correctness { get; set; }
+        public ProductDescription(string description, string correctness)
+        {
+            Description = description;
+            Correctness = correctness;
+        }
 
         public ProductDescription(string description, string attributes, string correctness)
         {
