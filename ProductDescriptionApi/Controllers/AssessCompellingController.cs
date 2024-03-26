@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace ProductDescriptionApi.Controllers;
 
 [ApiController]
-[Route("compelling2-assess")]
+[Route("compelling-assessment")]
 public class AssessCompellingController : ControllerBase
 {
     private readonly string _inputFilePath;

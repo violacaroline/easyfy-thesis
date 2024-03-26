@@ -5,7 +5,7 @@ using ProductDescriptionApi.Services;
 namespace ProductDescriptionApi.Controllers;
 
 [ApiController]
-[Route("constraints-assess")]
+[Route("constraints-assessment")]
 
 public class AssessConstraintsController : ControllerBase
 

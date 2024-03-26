@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace ProductDescriptionApi.Controllers;
 
 [ApiController]
-[Route("language-assess")]
+[Route("language-assessment")]
 public class AssessLanguageController : ControllerBase
 {
     private readonly string _inputFilePath;
