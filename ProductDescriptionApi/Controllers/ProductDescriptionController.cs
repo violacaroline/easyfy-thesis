@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using ProductDescriptionApi.Models;
+using ProductDescriptionApi.Services;
 using System.Threading.Tasks;
 
 namespace ProductDescriptionApi.Controllers;
@@ -10,11 +11,20 @@ namespace ProductDescriptionApi.Controllers;
 public class ProductDescriptionController : ControllerBase
 {
     private readonly OpenAIService _openAIApiService;
+     private readonly string _languageInputFilePath;
+     private readonly string _compellingInputFilePath;
+     private readonly string _constraintsInputFilePath;
+    private readonly IConfiguration _configuration;
 
     // Constructor injection of OpenAIApiService
-    public ProductDescriptionController(OpenAIService openAIApiService)
+    public ProductDescriptionController(IConfiguration configuration, OpenAIService openAIApiService, CsvHandler csvHandler)
     {
         _openAIApiService = openAIApiService;
+         _configuration = configuration;
+        _openAIApiService = openAIApiService;
+        _languageInputFilePath = _configuration["InputFilePath:Language"];
+        _compellingInputFilePath = _configuration["InputFilePath:Compelling"];
+        _constraintsInputFilePath = _configuration["InputFilePath:Constraints"];
     }
 
     [HttpGet]
@@ -46,8 +56,9 @@ public class ProductDescriptionController : ControllerBase
 
         
         // Write the response to a CSV file
-        WriteToCSV(messageContent, "assessment_data/assessment_input/to_assess_language_descriptions.csv");
-        WriteToCSV($"{messageContent}----{attributes}", "assessment_data/assessment_input/to_assess_constraints_descriptions.csv");
+        WriteToCSV(messageContent, _languageInputFilePath);
+        WriteToCSV(messageContent, _compellingInputFilePath);
+        WriteToCSV($"{messageContent}----{attributes}", _constraintsInputFilePath);
 
         // Return only the message content
         return Ok(messageContent);
