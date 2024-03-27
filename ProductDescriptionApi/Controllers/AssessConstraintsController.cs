@@ -12,6 +12,7 @@ public class AssessConstraintsController : ControllerBase
 {
   private readonly string _inputFilePath;
   private readonly string _resultsFilePath;
+  private readonly int _totalIterations;
   private readonly OpenAIService _openAIApiService;
   private readonly CsvHandler _csvHandler;
   private readonly IConfiguration _configuration;
@@ -24,6 +25,7 @@ public class AssessConstraintsController : ControllerBase
     _csvHandler = csvHandler;
     _inputFilePath = _configuration["InputFilePath:Constraints"];
     _resultsFilePath = _configuration["ResultsFilePath:Constraints"];
+    _totalIterations = _configuration.GetValue<int>("TotalIterations");
   }
 
   [HttpGet]
@@ -37,8 +39,7 @@ public class AssessConstraintsController : ControllerBase
   public async Task<IActionResult> AssessDescriptions()
   {
     {
-      int totalIterations = 1;
-      _csvHandler.InitializeCsvWithHeaders(_resultsFilePath, totalIterations);
+      _csvHandler.InitializeCsvWithHeaders(_resultsFilePath, _totalIterations);
 
       // Store results for batch writing: Product Number => List of Results ("Correct" or "Wrong")
       var batchResults = new Dictionary<int, List<int>>();
@@ -50,7 +51,7 @@ public class AssessConstraintsController : ControllerBase
         batchResults.Add(productNumber + 1, new List<int>());
       }
       // Assess descriptions across iterations
-      for (int iterationNumber = 0; iterationNumber < totalIterations; iterationNumber++)
+      for (int iterationNumber = 0; iterationNumber < _totalIterations; iterationNumber++)
       {
         for (int productNumber = 0; productNumber < descriptionsAndAttributes.Count; productNumber++)
         {

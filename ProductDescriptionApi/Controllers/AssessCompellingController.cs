@@ -14,6 +14,7 @@ public class AssessCompellingController : ControllerBase
 {
     private readonly string _inputFilePath;
     private readonly string _resultsFilePath;
+    private readonly int _totalIterations;
     private readonly IConfiguration _configuration;
     private readonly OpenAIService _openAIApiService;
     private readonly CsvHandler _csvHandler;
@@ -25,6 +26,7 @@ public class AssessCompellingController : ControllerBase
         _csvHandler = csvHandler;
         _inputFilePath = _configuration["InputFilePath:Compelling"];
         _resultsFilePath = _configuration["ResultsFilePath:Compelling"];
+        _totalIterations = _configuration.GetValue<int>("TotalIterations");
     }
 
     [HttpGet]
@@ -37,8 +39,7 @@ public class AssessCompellingController : ControllerBase
     [HttpPost("assess")]
     public async Task<IActionResult> AssessDescriptions()
     {
-        int totalIterations = 1;
-        _csvHandler.InitializeCsvWithHeaders(_resultsFilePath, totalIterations);
+        _csvHandler.InitializeCsvWithHeaders(_resultsFilePath, _totalIterations);
 
         var batchResults = new Dictionary<int, List<int>>();
         List<ProductDescription> descriptions = _csvHandler.ReadDescriptionsAndAttributesFromCSV(_inputFilePath);
@@ -47,7 +48,7 @@ public class AssessCompellingController : ControllerBase
             batchResults.Add(productNumber + 1, new List<int>());
         }
 
-        for (int iterationNumber = 0; iterationNumber < totalIterations; iterationNumber++)
+        for (int iterationNumber = 0; iterationNumber < _totalIterations; iterationNumber++)
         {
             for (int productNumber = 0; productNumber < descriptions.Count; productNumber++)
             {
