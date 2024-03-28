@@ -8,20 +8,25 @@ public class OpenAIService
 {
    private readonly HttpClient _httpClient;
     private readonly string _apiKey;
+    private readonly string _GptModel;
+    
+    private readonly IConfiguration _configuration;
 
-    public OpenAIService(HttpClient httpClient, IOptions<OpenAIServiceOptions> options)
+    public OpenAIService(HttpClient httpClient, IOptions<OpenAIServiceOptions> options, IConfiguration configuration)
     {
+        _configuration = configuration;
         _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         var settings = options.Value ?? throw new ArgumentNullException(nameof(options));
         _apiKey = settings.ApiKey ?? throw new ArgumentNullException(nameof(settings.ApiKey));
         _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
+        _GptModel = _configuration["GptModel"];
     }
 public async Task<string> CreateChatCompletionAsync(string systemMessage, string userMessage, double temperature)
 {
     var requestBody = new
     {
-        model = "gpt-4-0125-preview", // Use the latest model available to you.
-        // model = "gpt-3.5-turbo-0125", // Use the latest model available to you.
+        // model = "gpt-4-0125-preview", // Use the latest model available to you.
+        model = _GptModel, // Use the latest model available to you.
         messages = new[]
         {
             new { role = "system", content = systemMessage },

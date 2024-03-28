@@ -14,7 +14,9 @@ public class AssessCompellingController : ControllerBase
 {
     private readonly string _inputFilePath;
     private readonly string _resultsFilePath;
+    private readonly string _resultsConfusionMatrixFilePath;
     private readonly int _totalIterations;
+    private readonly string? _GptModel;
     private readonly IConfiguration _configuration;
     private readonly OpenAIService _openAIApiService;
     private readonly CsvHandler _csvHandler;
@@ -26,7 +28,9 @@ public class AssessCompellingController : ControllerBase
         _csvHandler = csvHandler;
         _inputFilePath = _configuration["InputFilePath:Compelling"];
         _resultsFilePath = _configuration["ResultsFilePath:Compelling"];
+        _resultsConfusionMatrixFilePath = _configuration["ResultsFilePath:Results"];
         _totalIterations = _configuration.GetValue<int>("TotalIterations");
+        _GptModel = _configuration["GptModel"];
     }
 
     [HttpGet]
@@ -39,10 +43,17 @@ public class AssessCompellingController : ControllerBase
     [HttpPost("assess")]
     public async Task<IActionResult> AssessDescriptions()
     {
+        double truePositive = 0;
+        double trueNegative = 0;
+        double totalProductDescriptions;
+        string assessmentType= "Compelling";
+
+
         _csvHandler.InitializeCsvWithHeaders(_resultsFilePath, _totalIterations);
 
         var batchResults = new Dictionary<int, List<int>>();
         List<ProductDescription> descriptions = _csvHandler.ReadDescriptionsAndAttributesFromCSV(_inputFilePath);
+        totalProductDescriptions = descriptions.Count;
         for (int productNumber = 0; productNumber < descriptions.Count; productNumber++)
         {
             batchResults.Add(productNumber + 1, new List<int>());
@@ -75,6 +86,7 @@ public class AssessCompellingController : ControllerBase
                 if (messageContent.Contains("correct", StringComparison.OrdinalIgnoreCase) && GroundTruth == "Correct")
                 {
                     Console.WriteLine(1);
+                    truePositive++;
                     batchResults[productNumber + 1].Add(1);
                 }
                 else if (messageContent.Contains("correct", StringComparison.OrdinalIgnoreCase) && GroundTruth == "Wrong")
@@ -85,6 +97,7 @@ public class AssessCompellingController : ControllerBase
                 else if (messageContent.Contains("wrong", StringComparison.OrdinalIgnoreCase) && GroundTruth == "Wrong")
                 {
                     Console.WriteLine(3);
+                    trueNegative++;
                     batchResults[productNumber + 1].Add(1);
                 }
                 else if (messageContent.Contains("wrong", StringComparison.OrdinalIgnoreCase) && GroundTruth == "Correct")
@@ -95,9 +108,11 @@ public class AssessCompellingController : ControllerBase
             }
         }
 
+        double accuracy = (truePositive + trueNegative) / totalProductDescriptions;
+        Console.WriteLine($"truePositive = {truePositive}, trueNegative: {trueNegative},  totalProductDescriptions: {totalProductDescriptions} = {accuracy}" );
         // Write all results to CSV at once
         _csvHandler.WriteResultsToCSV(batchResults, _resultsFilePath);
-
+        _csvHandler.WriteConfusionMatrixResultsToCSV(accuracy, _resultsConfusionMatrixFilePath, assessmentType,   _GptModel);
         return Ok();
     }
 

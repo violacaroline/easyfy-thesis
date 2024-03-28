@@ -12,7 +12,9 @@ public class AssessConstraintsController : ControllerBase
 {
   private readonly string _inputFilePath;
   private readonly string _resultsFilePath;
-  private readonly int _totalIterations;
+  private readonly string _resultsConfusionMatrixFilePath;
+    private readonly string? _GptModel;
+    private readonly int _totalIterations;
   private readonly OpenAIService _openAIApiService;
   private readonly CsvHandler _csvHandler;
   private readonly IConfiguration _configuration;
@@ -25,6 +27,8 @@ public class AssessConstraintsController : ControllerBase
     _csvHandler = csvHandler;
     _inputFilePath = _configuration["InputFilePath:Constraints"];
     _resultsFilePath = _configuration["ResultsFilePath:Constraints"];
+    _resultsConfusionMatrixFilePath = _configuration["ResultsFilePath:Results"];
+    _GptModel = _configuration["GptModel"];
     _totalIterations = _configuration.GetValue<int>("TotalIterations");
   }
 
@@ -39,6 +43,11 @@ public class AssessConstraintsController : ControllerBase
   public async Task<IActionResult> AssessDescriptions()
   {
     {
+      double truePositive = 0;
+      double trueNegative = 0;
+      double totalProductDescriptions;
+      string assessmentType = "Constraints";
+
       _csvHandler.InitializeCsvWithHeaders(_resultsFilePath, _totalIterations);
 
       // Store results for batch writing: Product Number => List of Results ("Correct" or "Wrong")
@@ -46,6 +55,7 @@ public class AssessConstraintsController : ControllerBase
       //   var descriptions = ReadDescriptions(filePath);
       List<ProductDescription> descriptionsAndAttributes = _csvHandler.ReadDescriptionsAndAttributesFromCSV(_inputFilePath);
       // Prepare the dictionary to hold results for each product
+      totalProductDescriptions = descriptionsAndAttributes.Count;
       for (int productNumber = 0; productNumber < descriptionsAndAttributes.Count; productNumber++)
       {
         batchResults.Add(productNumber + 1, new List<int>());
@@ -66,7 +76,7 @@ public class AssessConstraintsController : ControllerBase
           var messageContent = ParseApiResponse(response);
           Console.WriteLine("-----------------------------");
           Console.WriteLine("PRODUCTnr: ");
-          Console.WriteLine(productNumber +1);
+          Console.WriteLine(productNumber + 1);
           Console.WriteLine("GroundTruth: ");
           Console.WriteLine(descriptionsAndAttributes[productNumber].Correctness);
           Console.WriteLine("Chat gpt :");
@@ -75,6 +85,7 @@ public class AssessConstraintsController : ControllerBase
           if (messageContent.Contains("correct", StringComparison.OrdinalIgnoreCase) && GroundTruth == "Correct")
           {
             Console.WriteLine(1);
+            truePositive++;
             batchResults[productNumber + 1].Add(1);
           }
           else if (messageContent.Contains("correct", StringComparison.OrdinalIgnoreCase) && GroundTruth == "Wrong")
@@ -85,6 +96,7 @@ public class AssessConstraintsController : ControllerBase
           else if (messageContent.Contains("wrong", StringComparison.OrdinalIgnoreCase) && GroundTruth == "Wrong")
           {
             Console.WriteLine(3);
+            trueNegative++;
             batchResults[productNumber + 1].Add(1);
           }
           else if (messageContent.Contains("wrong", StringComparison.OrdinalIgnoreCase) && GroundTruth == "Correct")
@@ -94,6 +106,9 @@ public class AssessConstraintsController : ControllerBase
           }
         }
       }
+      double accuracy = (truePositive + trueNegative) / totalProductDescriptions;
+      Console.WriteLine($"truePositive = {truePositive}, trueNegative: {trueNegative},  totalProductDescriptions: {totalProductDescriptions} = {accuracy}");
+      _csvHandler.WriteConfusionMatrixResultsToCSV(accuracy, _resultsConfusionMatrixFilePath, assessmentType, _GptModel);
 
       // Write all results to CSV at once, now that assessments are complete
       WriteAssessedDescriptionToCSV(batchResults);

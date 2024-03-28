@@ -63,6 +63,13 @@ namespace ProductDescriptionApi.Services
                 writer.WriteLine();
             }
         }
+        public void WriteConfusionMatrixResultsToCSV( double result, string filePath, string assessmentType, string model)
+        {
+            using var writer = new StreamWriter(filePath, append: true);
+                writer.Write($"{model};{assessmentType};{result}");
+                writer.WriteLine();
+            
+        }
     }
 
     public class ProductDescription
