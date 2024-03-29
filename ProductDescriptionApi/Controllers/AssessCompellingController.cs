@@ -108,8 +108,8 @@ public class AssessCompellingController : ControllerBase
             }
         }
 
-        double accuracy = (truePositive + trueNegative) / totalProductDescriptions;
-        Console.WriteLine($"truePositive = {truePositive}, trueNegative: {trueNegative},  totalProductDescriptions: {totalProductDescriptions} = {accuracy}" );
+        double accuracy = (truePositive + trueNegative) / (totalProductDescriptions * _totalIterations);
+        Console.WriteLine($"truePositive = {truePositive}, trueNegative: {trueNegative},  totalProductDescriptions: {totalProductDescriptions * _totalIterations} = {accuracy}" );
         // Write all results to CSV at once
         _csvHandler.WriteResultsToCSV(batchResults, _resultsFilePath);
         _csvHandler.WriteConfusionMatrixResultsToCSV(accuracy, _resultsConfusionMatrixFilePath, assessmentType,   _GptModel);
