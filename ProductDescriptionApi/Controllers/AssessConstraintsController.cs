@@ -120,7 +120,7 @@ public class AssessConstraintsController : ControllerBase
 
   private async Task<string> AssessDescriptionAsync(ProductDescription productInfo)
   {
-    string systemMessage = $"Kontrollera om följande text exakt innehåller alla dessa specifika ord eller fraser:[{productInfo.Attributes}].Returnera endast \'correct\' om texten innehåller alla ord eller fraser. Returnera \'wrong\' om något ord eller någon fras saknas eller avviker från hur det är specificerat, utan att ge några ytterligare kommentarer eller detaljer.";
+    string systemMessage = $"Kontrollera om följande text exakt innehåller alla dessa specifika ord, fraser, formuleringar:[{productInfo.Attributes}].Returnera endast \'correct\' om texten innehåller alla ord eller fraser. Returnera \'wrong\' om något ord eller någon fras saknas eller avviker från hur det är specificerat, utan att ge några ytterligare kommentarer eller detaljer.";
     double temperature = 1;
     try
     {
