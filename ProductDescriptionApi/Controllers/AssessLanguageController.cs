@@ -118,7 +118,7 @@ public class AssessLanguageController : ControllerBase
 
     private async Task<string> AssessDescriptionAsync(ProductDescription productInfo)
     {
-        string systemMessage = "Assess if the following text contains any spelling, grammatical, or punctuation errors. Only return 'Wrong' if the text needs corrections, and 'correct' if the text is correct.";
+        string systemMessage = "Bedöm om följande text innehåller några stavfel, grammatiska fel eller skiljetecken. Returnera endast 'Wrong' om texten behöver korrigeringar, och 'Correct' om texten är korrekt.";
         double temperature = 1;
         try
         {
