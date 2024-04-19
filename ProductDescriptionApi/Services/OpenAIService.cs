@@ -45,7 +45,6 @@ public async Task<string> CreateChatCompletionAsync(string systemMessage, string
     var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
     HttpResponseMessage response = await _httpClient.PostAsync("https://api.openai.com/v1/chat/completions", content);
-
     if (response.IsSuccessStatusCode)
     {
         string responseContent = await response.Content.ReadAsStringAsync();
