@@ -112,7 +112,7 @@ public class AssessCompellingController : ControllerBase
         Console.WriteLine($"truePositive = {truePositive}, trueNegative: {trueNegative},  totalProductDescriptions: {totalProductDescriptions * _totalIterations} = {accuracy}" );
         // Write all results to CSV at once
         _csvHandler.WriteResultsToCSV(batchResults, _resultsFilePath);
-        _csvHandler.WriteConfusionMatrixResultsToCSV(accuracy, _resultsConfusionMatrixFilePath, assessmentType,   _GptModel);
+        _csvHandler.WriteConfusionMatrixResultsToCSV(accuracy, _resultsConfusionMatrixFilePath, assessmentType, _GptModel);
         return Ok();
     }
 
