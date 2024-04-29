@@ -39,6 +39,20 @@ namespace ProductDescriptionApi.Services
             return descriptionsAndAttributes;
         }
 
+        public void WriteConfusionMatrixDetailsToCSV(Dictionary<int, List<int>> confusionResults, string filePath)
+        {
+            using var writer = new StreamWriter(filePath, append: false); // Open file, ready to overwrite old data
+            writer.WriteLine("Product Number;True Positive;False Positive;True Negative;False Negative"); // Write the header
+
+            foreach (var result in confusionResults)
+            {
+                writer.Write($"{result.Key}"); // Product Number
+                var metrics = result.Value;
+                writer.Write($";{metrics[0]};{metrics[1]};{metrics[2]};{metrics[3]}"); // Write TP, FP, TN, FN values
+                writer.WriteLine();
+            }
+        }
+
         public void InitializeCsvWithHeaders(string filePath, int iterations)
         {
             using var writer = new StreamWriter(filePath, append: false);
@@ -63,12 +77,12 @@ namespace ProductDescriptionApi.Services
                 writer.WriteLine();
             }
         }
-        public void WriteConfusionMatrixResultsToCSV( double result, string filePath, string assessmentType, string model)
+        public void WriteConfusionMatrixResultsToCSV(double result, string filePath, string assessmentType, string model)
         {
             using var writer = new StreamWriter(filePath, append: true);
-                writer.Write($"{model};{assessmentType};{result}");
-                writer.WriteLine();
-            
+            writer.Write($"{model};{assessmentType};{result}");
+            writer.WriteLine();
+
         }
     }
 
@@ -90,5 +104,7 @@ namespace ProductDescriptionApi.Services
             Correctness = correctness;
         }
     }
+
+
 
 }

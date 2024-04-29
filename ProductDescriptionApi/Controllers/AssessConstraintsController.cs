@@ -13,8 +13,8 @@ public class AssessConstraintsController : ControllerBase
   private readonly string _inputFilePath;
   private readonly string _resultsFilePath;
   private readonly string _resultsConfusionMatrixFilePath;
-    private readonly string? _GptModel;
-    private readonly int _totalIterations;
+  private readonly string? _GptModel;
+  private readonly int _totalIterations;
   private readonly OpenAIService _openAIApiService;
   private readonly CsvHandler _csvHandler;
   private readonly IConfiguration _configuration;
@@ -45,20 +45,22 @@ public class AssessConstraintsController : ControllerBase
     {
       double truePositive = 0;
       double trueNegative = 0;
+      double falsePositive = 0;
+      double falseNegative = 0;
       double totalProductDescriptions;
       string assessmentType = "Constraints";
 
       _csvHandler.InitializeCsvWithHeaders(_resultsFilePath, _totalIterations);
 
       // Store results for batch writing: Product Number => List of Results ("Correct" or "Wrong")
-      var batchResults = new Dictionary<int, List<int>>();
+      var batchResultsDetails = new Dictionary<int, List<int>>();
       //   var descriptions = ReadDescriptions(filePath);
       List<ProductDescription> descriptionsAndAttributes = _csvHandler.ReadDescriptionsAndAttributesFromCSV(_inputFilePath);
       // Prepare the dictionary to hold results for each product
       totalProductDescriptions = descriptionsAndAttributes.Count;
       for (int productNumber = 0; productNumber < descriptionsAndAttributes.Count; productNumber++)
       {
-        batchResults.Add(productNumber + 1, new List<int>());
+        batchResultsDetails.Add(productNumber + 1, new List<int> { 0, 0, 0, 0 });
       }
       // Assess descriptions across iterations
       for (int iterationNumber = 0; iterationNumber < _totalIterations; iterationNumber++)
@@ -69,7 +71,7 @@ public class AssessConstraintsController : ControllerBase
           if (response == null)
           {
             // Decide how to handle null responses. Here, adding "Error" to indicate a failed assessment.
-            batchResults[productNumber + 1].Add(-1);
+            batchResultsDetails[productNumber + 1].Add(-1);
             continue;
           }
           string GroundTruth = descriptionsAndAttributes[productNumber].Correctness;
@@ -86,32 +88,34 @@ public class AssessConstraintsController : ControllerBase
           {
             Console.WriteLine(1);
             truePositive++;
-            batchResults[productNumber + 1].Add(1);
+            batchResultsDetails[productNumber + 1][0]++;
           }
           else if (messageContent.Contains("correct", StringComparison.OrdinalIgnoreCase) && GroundTruth == "Wrong")
           {
             Console.WriteLine(2);
-            batchResults[productNumber + 1].Add(0);
+            falsePositive++;
+            batchResultsDetails[productNumber + 1][1]++;
           }
           else if (messageContent.Contains("wrong", StringComparison.OrdinalIgnoreCase) && GroundTruth == "Wrong")
           {
             Console.WriteLine(3);
             trueNegative++;
-            batchResults[productNumber + 1].Add(1);
+            batchResultsDetails[productNumber + 1][2]++;
           }
           else if (messageContent.Contains("wrong", StringComparison.OrdinalIgnoreCase) && GroundTruth == "Correct")
           {
             Console.WriteLine(4);
-            batchResults[productNumber + 1].Add(0);
+            falseNegative++;
+            batchResultsDetails[productNumber + 1][3]++;
           }
         }
       }
       double accuracy = (truePositive + trueNegative) / (totalProductDescriptions * _totalIterations);
-      Console.WriteLine($"truePositive = {truePositive}, trueNegative: {trueNegative},  totalProductDescriptions: {totalProductDescriptions * _totalIterations} = {accuracy}");
+      Console.WriteLine($"truePositive = {truePositive}, trueNegative: {trueNegative}, falsePositive: {falsePositive}, falseNegative: {falseNegative},  totalProductDescriptions: {totalProductDescriptions * _totalIterations} = {accuracy}");
       _csvHandler.WriteConfusionMatrixResultsToCSV(accuracy, _resultsConfusionMatrixFilePath, assessmentType, _GptModel);
 
       // Write all results to CSV at once, now that assessments are complete
-      WriteAssessedDescriptionToCSV(batchResults);
+      _csvHandler.WriteConfusionMatrixDetailsToCSV(batchResultsDetails, _resultsFilePath);
 
       return Ok();
     }

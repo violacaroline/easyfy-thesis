@@ -45,16 +45,18 @@ public class AssessLanguageController : ControllerBase
     {
         double truePositive = 0;
         double trueNegative = 0;
+        double falsePositive = 0;
+        double falseNegative = 0;
         double totalProductDescriptions;
-        string assessmentType= "Language";
+        string assessmentType = "Language";
         _csvHandler.InitializeCsvWithHeaders(_resultsFilePath, _totalIterations);
 
-        var batchResults = new Dictionary<int, List<int>>();
+        var batchResultsDetails = new Dictionary<int, List<int>>();
         List<ProductDescription> descriptions = _csvHandler.ReadDescriptionsAndAttributesFromCSV(_inputFilePath);
         totalProductDescriptions = descriptions.Count;
         for (int productNumber = 0; productNumber < descriptions.Count; productNumber++)
         {
-            batchResults.Add(productNumber + 1, new List<int>());
+            batchResultsDetails.Add(productNumber + 1, new List<int> { 0, 0, 0, 0 });
         }
 
         for (int iterationNumber = 0; iterationNumber < _totalIterations; iterationNumber++)
@@ -64,7 +66,6 @@ public class AssessLanguageController : ControllerBase
                 var response = await AssessDescriptionAsync(descriptions[productNumber]);
                 if (response == null)
                 {
-                    batchResults[productNumber + 1].Add(-1);
                     continue;
                 }
 
@@ -85,32 +86,34 @@ public class AssessLanguageController : ControllerBase
                 {
                     Console.WriteLine(1);
                     truePositive++;
-                    batchResults[productNumber + 1].Add(1);
+                    batchResultsDetails[productNumber + 1][0]++;
                 }
                 else if (messageContent.Contains("correct", StringComparison.OrdinalIgnoreCase) && GroundTruth == "Wrong")
                 {
                     Console.WriteLine(2);
-                    batchResults[productNumber + 1].Add(0);
+                    falsePositive++;
+                    batchResultsDetails[productNumber + 1][1]++;
                 }
                 else if (messageContent.Contains("wrong", StringComparison.OrdinalIgnoreCase) && GroundTruth == "Wrong")
                 {
                     Console.WriteLine(3);
                     trueNegative++;
-                    batchResults[productNumber + 1].Add(1);
+                    batchResultsDetails[productNumber + 1][2]++;
                 }
                 else if (messageContent.Contains("wrong", StringComparison.OrdinalIgnoreCase) && GroundTruth == "Correct")
                 {
                     Console.WriteLine(4);
-                    batchResults[productNumber + 1].Add(0);
+                    falseNegative++;
+                    batchResultsDetails[productNumber + 1][3]++;
                 }
             }
         }
         double accuracy = (truePositive + trueNegative) / (totalProductDescriptions * _totalIterations);
-        Console.WriteLine($"truePositive = {truePositive}, trueNegative: {trueNegative},  totalProductDescriptions: {totalProductDescriptions * _totalIterations} = {accuracy}" );
-         _csvHandler.WriteConfusionMatrixResultsToCSV(accuracy, _resultsConfusionMatrixFilePath, assessmentType, _GptModel);
+       Console.WriteLine($"truePositive = {truePositive}, trueNegative: {trueNegative}, falsePositive: {falsePositive}, falseNegative: {falseNegative},  totalProductDescriptions: {totalProductDescriptions * _totalIterations} = {accuracy}");
+        _csvHandler.WriteConfusionMatrixResultsToCSV(accuracy, _resultsConfusionMatrixFilePath, assessmentType, _GptModel);
 
         // Write all results to CSV at once
-        _csvHandler.WriteResultsToCSV(batchResults, _resultsFilePath);
+        _csvHandler.WriteConfusionMatrixDetailsToCSV(batchResultsDetails, _resultsFilePath);
 
         return Ok();
     }
