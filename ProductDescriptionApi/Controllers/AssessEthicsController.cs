@@ -10,7 +10,7 @@ namespace ProductDescriptionApi.Controllers;
 
 [ApiController]
 [Route("compelling-assessment")]
-public class AssessCompellingController : ControllerBase
+public class AssessEthicsController : ControllerBase
 {
     private readonly string _inputFilePath;
     private readonly string _resultsFilePath;
@@ -21,7 +21,7 @@ public class AssessCompellingController : ControllerBase
     private readonly OpenAIService _openAIApiService;
     private readonly CsvHandler _csvHandler;
 
-    public AssessCompellingController(IConfiguration configuration, OpenAIService openAIApiService, CsvHandler csvHandler)
+    public AssessEthicsController(IConfiguration configuration, OpenAIService openAIApiService, CsvHandler csvHandler)
     {
         _configuration = configuration;
         _openAIApiService = openAIApiService;
