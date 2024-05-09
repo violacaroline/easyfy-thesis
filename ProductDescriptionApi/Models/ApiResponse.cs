@@ -7,9 +7,8 @@ namespace ProductDescriptionApi.Models
 {
   public class ApiResponse
   {
-    // public string? Response { get; set; }
     public List<Choice>? choices { get; set; }
-    public Usage usage { get; set; }
+    public Usage? usage { get; set; }
   }
 
   public class Usage

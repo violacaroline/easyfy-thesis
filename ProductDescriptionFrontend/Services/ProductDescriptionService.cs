@@ -19,12 +19,6 @@ public class ProductDescriptionService
         {
             var formattedTemperature = temperature.Replace(',', '.');
 
-            Console.WriteLine($"----------------------------------------------");
-            Console.WriteLine($"Formatted Temperature: {formattedTemperature}");
-            Console.WriteLine($"SystemMessage: {systemMessage}");
-            Console.WriteLine($"UserMessage: {$"\"\"\"{productName}\"\"\"\nseedWords: {keywords}"}");
-
-            Console.WriteLine($"----------------------------------------------");
             var response = await _httpClient.PostAsJsonAsync("http://localhost:5000/product-description/generate", new
             {
                 temperature = formattedTemperature,

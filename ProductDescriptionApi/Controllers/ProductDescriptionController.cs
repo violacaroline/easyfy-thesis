@@ -11,9 +11,9 @@ namespace ProductDescriptionApi.Controllers;
 public class ProductDescriptionController : ControllerBase
 {
     private readonly OpenAIService _openAIApiService;
-     private readonly string _languageInputFilePath;
-     private readonly string _compellingInputFilePath;
-     private readonly string _constraintsInputFilePath;
+     private readonly string? _languageInputFilePath;
+     private readonly string? _compellingInputFilePath;
+     private readonly string? _constraintsInputFilePath;
     private readonly IConfiguration _configuration;
 
     // Constructor injection of OpenAIApiService
@@ -49,7 +49,6 @@ public class ProductDescriptionController : ControllerBase
         // Call the OpenAI service with the system message and the user message
         string response = await _openAIApiService.CreateChatCompletionAsync(systemMessage, userMessage, Temperature);
 
-        // Assuming response is a JSON string that contains the message.content field
         // Parse the JSON to extract message.content
         var parsedResponse = JsonConvert.DeserializeObject<ApiResponse>(response);
         string messageContent = parsedResponse?.choices?[0]?.message?.content ?? "No response";
