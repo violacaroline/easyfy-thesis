@@ -73,43 +73,29 @@ public class AssessLanguageController : ControllerBase
 
                 var messageContent = ParseApiResponse(response);
 
-                Console.WriteLine("-----------------------------");
-                Console.WriteLine("PRODUCTnr: ");
-                Console.WriteLine(productNumber + 1);
-                Console.WriteLine("GroundTruth: ");
-                Console.WriteLine(descriptions[productNumber].Correctness);
-                Console.WriteLine("Chat gpt :");
-                Console.WriteLine(messageContent);
-                Console.WriteLine("-----------------------------");
-
                 if (messageContent.Contains("correct", StringComparison.OrdinalIgnoreCase) && GroundTruth == "Correct")
                 {
-                    Console.WriteLine(1);
                     truePositive++;
                     batchResultsDetails[productNumber + 1][0]++;
                 }
                 else if (messageContent.Contains("correct", StringComparison.OrdinalIgnoreCase) && GroundTruth == "Wrong")
                 {
-                    Console.WriteLine(2);
                     falsePositive++;
                     batchResultsDetails[productNumber + 1][1]++;
                 }
                 else if (messageContent.Contains("wrong", StringComparison.OrdinalIgnoreCase) && GroundTruth == "Wrong")
                 {
-                    Console.WriteLine(3);
                     trueNegative++;
                     batchResultsDetails[productNumber + 1][2]++;
                 }
                 else if (messageContent.Contains("wrong", StringComparison.OrdinalIgnoreCase) && GroundTruth == "Correct")
                 {
-                    Console.WriteLine(4);
                     falseNegative++;
                     batchResultsDetails[productNumber + 1][3]++;
                 }
             }
         }
         double accuracy = (truePositive + trueNegative) / (totalProductDescriptions * _totalIterations);
-       Console.WriteLine($"truePositive = {truePositive}, trueNegative: {trueNegative}, falsePositive: {falsePositive}, falseNegative: {falseNegative},  totalProductDescriptions: {totalProductDescriptions * _totalIterations} = {accuracy}");
         _csvHandler.WriteConfusionMatrixResultsToCSV(accuracy, _resultsConfusionMatrixFilePath, assessmentType, _GptModel);
 
         // Write all results to CSV at once
