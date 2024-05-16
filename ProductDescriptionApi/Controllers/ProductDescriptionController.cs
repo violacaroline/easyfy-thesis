@@ -54,37 +54,48 @@ namespace ProductDescriptionApi.Controllers
             string attributes = request.Attributes ?? "";
 
             double Temperature = double.Parse(temp);
-            // Call the OpenAI service with the system message and the user message
-            string response = await _openAIApiService.CreateChatCompletionAsync(systemMessage, userMessage, Temperature);
+            string messageContent = "";
+            string constraintsEvaluation = "";
+            string ethicsEvaluation = "";
+            string languageEvaluation = "";
 
-            // Parse the JSON to extract message.content
-            var parsedResponse = JsonConvert.DeserializeObject<ApiResponse>(response);
-            string messageContent = parsedResponse?.choices?[0]?.message?.content ?? "No response";
+            int attempt = 0;
+            const int maxAttempts = 3;
 
-            // Write the response to a CSV file
-            WriteToCSV(messageContent, _languageInputFilePath);
-            WriteToCSV(messageContent, _compellingInputFilePath);
-            WriteToCSV($"{messageContent}----{attributes}", _constraintsInputFilePath);
+            do
+            {
+                attempt++;
+                // Call the OpenAI service with the system message and the user message
+                string response = await _openAIApiService.CreateChatCompletionAsync(systemMessage, userMessage, Temperature);
 
-            // Assess the generated description
-            var constraintsEvaluation = await _assessConstraintsController.AssessSingleDescription(new ProductDescription(messageContent, attributes));
-            var ethicsEvaluation = await _assessEthicsController.AssessSingleDescription(new ProductDescription(messageContent));
-            var languageEvaluation = await _assessLanguageController.AssessSingleDescription(new ProductDescription(messageContent));
+                // Parse the JSON to extract message.content
+                var parsedResponse = JsonConvert.DeserializeObject<ApiResponse>(response);
+                messageContent = parsedResponse?.choices?[0]?.message?.content ?? "No response";
 
-            // Log the results to the console
-            Console.WriteLine("Generated Product Description:");
-            Console.WriteLine(messageContent);
-            Console.WriteLine("Constraints Evaluation: " + constraintsEvaluation);
-            Console.WriteLine("Ethics Evaluation: " + ethicsEvaluation);
-            Console.WriteLine("Language Evaluation: " + languageEvaluation);
+                // Write the response to a CSV file
+                WriteToCSV(messageContent, _languageInputFilePath);
+                WriteToCSV(messageContent, _compellingInputFilePath);
+                WriteToCSV($"{messageContent}----{attributes}", _constraintsInputFilePath);
 
+                // Assess the generated description
+                constraintsEvaluation = await _assessConstraintsController.AssessSingleDescription(new ProductDescription(messageContent, attributes));
+                ethicsEvaluation = await _assessEthicsController.AssessSingleDescription(new ProductDescription(messageContent));
+                languageEvaluation = await _assessLanguageController.AssessSingleDescription(new ProductDescription(messageContent));
+
+                // Log the results to the console
+                Console.WriteLine("Generated Product Description:");
+                Console.WriteLine(messageContent);
+                Console.WriteLine("Constraints Evaluation: " + constraintsEvaluation);
+                Console.WriteLine("Ethics Evaluation: " + ethicsEvaluation);
+                Console.WriteLine("Language Evaluation: " + languageEvaluation);
+            } while ((constraintsEvaluation.ToLower() != "correct" || ethicsEvaluation.ToLower() != "correct" || languageEvaluation.ToLower() != "correct") && attempt < maxAttempts);
             // Return the evaluation results
             var result = new
             {
-                Description = messageContent,
-                ConstraintsEvaluation = constraintsEvaluation,
-                EthicsEvaluation = ethicsEvaluation,
-                LanguageEvaluation = languageEvaluation
+                Description = messageContent.ToLower(),
+                ConstraintsEvaluation = constraintsEvaluation.ToLower(),
+                EthicsEvaluation = ethicsEvaluation.ToLower(),
+                LanguageEvaluation = languageEvaluation.ToLower()
             };
 
             return Ok(result);

@@ -84,7 +84,7 @@ public class AssessEthicsController : ControllerBase
   public async Task<string> AssessSingleDescription(ProductDescription productDescription)
   {
     var response = await AssessDescriptionAsync(productDescription);
-    return response == null ? "Error" : ParseApiResponse(response);
+    return response == null ? "Error" : ParseApiResponse(response).ToLower();
   }
 
   private async Task<string> AssessDescriptionAsync(ProductDescription productInfo)
