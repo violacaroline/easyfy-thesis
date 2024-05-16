@@ -42,84 +42,47 @@ public class AssessConstraintsController : ControllerBase
   [HttpPost("assess")]
   public async Task<IActionResult> AssessDescriptions()
   {
+    // List to store results for batch writing: (Product Number, Product Description, Evaluation)
+    var batchResultsDetails = new List<Tuple<int, string, string>>();
+
+    // Read descriptions from CSV
+    List<ProductDescription> descriptionsAndAttributes = _csvHandler.ReadDescriptionsAndAttributesFromCSV(_inputFilePath);
+
+    // Assess each description
+    for (int productNumber = 0; productNumber < descriptionsAndAttributes.Count; productNumber++)
     {
-      double truePositive = 0;
-      double trueNegative = 0;
-      double falsePositive = 0;
-      double falseNegative = 0;
-      double totalProductDescriptions;
-      string assessmentType = "Constraints";
-
-      _csvHandler.InitializeCsvWithHeaders(_resultsFilePath, _totalIterations);
-
-      // Store results for batch writing: Product Number => List of Results ("Correct" or "Wrong")
-      var batchResultsDetails = new Dictionary<int, List<int>>();
-      //   var descriptions = ReadDescriptions(filePath);
-      List<ProductDescription> descriptionsAndAttributes = _csvHandler.ReadDescriptionsAndAttributesFromCSV(_inputFilePath);
-      // Prepare the dictionary to hold results for each product
-      totalProductDescriptions = descriptionsAndAttributes.Count;
-      for (int productNumber = 0; productNumber < descriptionsAndAttributes.Count; productNumber++)
+      var response = await AssessDescriptionAsync(descriptionsAndAttributes[productNumber]);
+      if (response == null)
       {
-        batchResultsDetails.Add(productNumber + 1, new List<int> { 0, 0, 0, 0 });
+        // Handle null responses. Here, adding "Error" to indicate a failed assessment.
+        batchResultsDetails.Add(Tuple.Create(productNumber + 1, descriptionsAndAttributes[productNumber].Description, "Error"));
+        continue;
       }
-      // Assess descriptions across iterations
-      for (int iterationNumber = 0; iterationNumber < _totalIterations; iterationNumber++)
+      var messageContent = ParseApiResponse(response);
+      Console.WriteLine("-----------------------------");
+      Console.WriteLine("Product: ");
+      Console.WriteLine(productNumber + 1);
+      Console.WriteLine("Chat GPT:");
+      Console.WriteLine(messageContent);
+      Console.WriteLine("-----------------------------");
+      if (messageContent.Contains("correct", StringComparison.OrdinalIgnoreCase))
       {
-        for (int productNumber = 0; productNumber < descriptionsAndAttributes.Count; productNumber++)
-        {
-          var response = await AssessDescriptionAsync(descriptionsAndAttributes[productNumber]);
-          if (response == null)
-          {
-            // Decide how to handle null responses. Here, adding "Error" to indicate a failed assessment.
-            batchResultsDetails[productNumber + 1].Add(-1);
-            continue;
-          }
-          string GroundTruth = descriptionsAndAttributes[productNumber].Correctness;
-          var messageContent = ParseApiResponse(response);
-          Console.WriteLine("-----------------------------");
-          Console.WriteLine("PRODUCTnr: ");
-          Console.WriteLine(productNumber + 1);
-          Console.WriteLine("GroundTruth: ");
-          Console.WriteLine(descriptionsAndAttributes[productNumber].Correctness);
-          Console.WriteLine("Chat gpt :");
-          Console.WriteLine(messageContent);
-          Console.WriteLine("-----------------------------");
-          if (messageContent.Contains("correct", StringComparison.OrdinalIgnoreCase) && GroundTruth == "Correct")
-          {
-            Console.WriteLine(1);
-            truePositive++;
-            batchResultsDetails[productNumber + 1][0]++;
-          }
-          else if (messageContent.Contains("correct", StringComparison.OrdinalIgnoreCase) && GroundTruth == "Wrong")
-          {
-            Console.WriteLine(2);
-            falsePositive++;
-            batchResultsDetails[productNumber + 1][1]++;
-          }
-          else if (messageContent.Contains("wrong", StringComparison.OrdinalIgnoreCase) && GroundTruth == "Wrong")
-          {
-            Console.WriteLine(3);
-            trueNegative++;
-            batchResultsDetails[productNumber + 1][2]++;
-          }
-          else if (messageContent.Contains("wrong", StringComparison.OrdinalIgnoreCase) && GroundTruth == "Correct")
-          {
-            Console.WriteLine(4);
-            falseNegative++;
-            batchResultsDetails[productNumber + 1][3]++;
-          }
-        }
+        Console.WriteLine("The product description adheres to the constraints");
+        batchResultsDetails.Add(Tuple.Create(productNumber + 1, descriptionsAndAttributes[productNumber].Description, "correct"));
       }
-      double accuracy = (truePositive + trueNegative) / (totalProductDescriptions * _totalIterations);
-      Console.WriteLine($"truePositive = {truePositive}, trueNegative: {trueNegative}, falsePositive: {falsePositive}, falseNegative: {falseNegative},  totalProductDescriptions: {totalProductDescriptions * _totalIterations} = {accuracy}");
-      _csvHandler.WriteConfusionMatrixResultsToCSV(accuracy, _resultsConfusionMatrixFilePath, assessmentType, _GptModel);
-
-      // Write all results to CSV at once, now that assessments are complete
-      _csvHandler.WriteConfusionMatrixDetailsToCSV(batchResultsDetails, _resultsFilePath);
-
-      return Ok();
+      else if (messageContent.Contains("wrong", StringComparison.OrdinalIgnoreCase))
+      {
+        Console.WriteLine("The product description contains constraint errors");
+        batchResultsDetails.Add(Tuple.Create(productNumber + 1, descriptionsAndAttributes[productNumber].Description, "wrong"));
+      }
     }
+
+    // Write all results to CSV at once, now that assessments are complete
+    _csvHandler.WriteAssessmentsResultsToCSV(batchResultsDetails, _resultsFilePath);
+
+    return Ok();
   }
+
 
 
   private async Task<string> AssessDescriptionAsync(ProductDescription productInfo)
@@ -152,19 +115,6 @@ public class AssessConstraintsController : ControllerBase
     {
       Console.WriteLine($"Error parsing response: {ex.Message}");
       return "Error parsing response"; // Consider how you want to handle parse errors.
-    }
-  }
-
-  private void WriteAssessedDescriptionToCSV(Dictionary<int, List<int>> batchResults)
-  {
-    try
-    {
-      _csvHandler.WriteResultsToCSV(batchResults, _resultsFilePath);
-    }
-    catch (Exception ex)
-    {
-      Console.WriteLine($"Error writing to CSV: {ex.Message}");
-      throw;
     }
   }
 

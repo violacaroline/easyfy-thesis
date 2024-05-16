@@ -12,126 +12,85 @@ namespace ProductDescriptionApi.Controllers;
 [Route("compelling-assessment")]
 public class AssessEthicsController : ControllerBase
 {
-    private readonly string _inputFilePath;
-    private readonly string _resultsFilePath;
-    private readonly string _resultsConfusionMatrixFilePath;
-    private readonly int _totalIterations;
-    private readonly string? _GptModel;
-    private readonly IConfiguration _configuration;
-    private readonly OpenAIService _openAIApiService;
-    private readonly CsvHandler _csvHandler;
+  private readonly string _inputFilePath;
+  private readonly string _resultsFilePath;
+  private readonly string _resultsConfusionMatrixFilePath;
+  private readonly int _totalIterations;
+  private readonly string? _GptModel;
+  private readonly IConfiguration _configuration;
+  private readonly OpenAIService _openAIApiService;
+  private readonly CsvHandler _csvHandler;
 
-    public AssessEthicsController(IConfiguration configuration, OpenAIService openAIApiService, CsvHandler csvHandler)
+  public AssessEthicsController(IConfiguration configuration, OpenAIService openAIApiService, CsvHandler csvHandler)
+  {
+    _configuration = configuration;
+    _openAIApiService = openAIApiService;
+    _csvHandler = csvHandler;
+    _inputFilePath = _configuration["InputFilePath:Compelling"];
+    _resultsFilePath = _configuration["ResultsFilePath:Compelling"];
+    _resultsConfusionMatrixFilePath = _configuration["ResultsFilePath:Results"];
+    _totalIterations = _configuration.GetValue<int>("TotalIterations");
+    _GptModel = _configuration["GptModel"];
+  }
+
+  [HttpGet]
+  public IActionResult Get()
+  {
+    var response = new { Message = "Hello! Here you can assess your texts for Compelling correctness." };
+    return Ok(response);
+  }
+
+  [HttpPost("assess")]
+  public async Task<IActionResult> AssessDescriptions()
+  {
+
+
+    string assessmentType = "Compelling";
+
+
+    var batchResultsDetails = new List<Tuple<int, string, string>>();
+    // Read descriptions from CSV
+    List<ProductDescription> descriptions = _csvHandler.ReadDescriptionsAndAttributesFromCSV(_inputFilePath);
+
+    for (int productNumber = 0; productNumber < descriptions.Count; productNumber++)
     {
-        _configuration = configuration;
-        _openAIApiService = openAIApiService;
-        _csvHandler = csvHandler;
-        _inputFilePath = _configuration["InputFilePath:Compelling"];
-        _resultsFilePath = _configuration["ResultsFilePath:Compelling"];
-        _resultsConfusionMatrixFilePath = _configuration["ResultsFilePath:Results"];
-        _totalIterations = _configuration.GetValue<int>("TotalIterations");
-        _GptModel = _configuration["GptModel"];
+      var response = await AssessDescriptionAsync(descriptions[productNumber]);
+      if (response == null)
+      {
+        batchResultsDetails.Add(Tuple.Create(productNumber + 1, descriptions[productNumber].Description, "Error"));
+        continue;
+      }
+
+      var messageContent = ParseApiResponse(response);
+
+      Console.WriteLine("-----------------------------");
+      Console.WriteLine("PRODUCTnr: ");
+      Console.WriteLine(productNumber + 1);
+      Console.WriteLine("Chat gpt :");
+      Console.WriteLine(messageContent);
+      Console.WriteLine("-----------------------------");
+
+      if (messageContent.Contains("correct", StringComparison.OrdinalIgnoreCase))
+      {
+        Console.WriteLine("The product description comply to ethics");
+        batchResultsDetails.Add(Tuple.Create(productNumber + 1, descriptions[productNumber].Description, "correct"));
+      }
+
+      else if (messageContent.Contains("wrong", StringComparison.OrdinalIgnoreCase))
+      {
+        Console.WriteLine("The product description can contain an ethical error");
+        batchResultsDetails.Add(Tuple.Create(productNumber + 1, descriptions[productNumber].Description, "wrong"));
+      }
     }
 
-    [HttpGet]
-    public IActionResult Get()
-    {
-        var response = new { Message = "Hello! Here you can assess your texts for Compelling correctness." };
-        return Ok(response);
-    }
-
-    [HttpPost("assess")]
-    public async Task<IActionResult> AssessDescriptions()
-    {
-        double truePositive = 0;
-        double trueNegative = 0;
-        double falsePositive = 0;
-        double falseNegative = 0;
-
-        double totalProductDescriptions;
-        string assessmentType= "Compelling";
+    _csvHandler.WriteAssessmentsResultsToCSV(batchResultsDetails, _resultsFilePath);
+    return Ok();
+  }
 
 
-        _csvHandler.InitializeCsvWithHeaders(_resultsFilePath, _totalIterations);
-
-      
-        var batchResultsDetails = new Dictionary<int, List<int>>();
-        List<ProductDescription> descriptions = _csvHandler.ReadDescriptionsAndAttributesFromCSV(_inputFilePath);
-        totalProductDescriptions = descriptions.Count;
-        for (int productNumber = 0; productNumber < descriptions.Count; productNumber++)
-        {
-            batchResultsDetails.Add(productNumber + 1, new List<int> {0, 0, 0, 0});
-        }
-
-        for (int iterationNumber = 0; iterationNumber < _totalIterations; iterationNumber++)
-        {
-            for (int productNumber = 0; productNumber < descriptions.Count; productNumber++)
-            {
-                var response = await AssessDescriptionAsync(descriptions[productNumber]);
-                if (response == null)
-                {
-                    batchResultsDetails[productNumber + 1].Add(-1);
-                    continue;
-                }
-
-                string GroundTruth = descriptions[productNumber].Correctness;
-
-                var messageContent = ParseApiResponse(response);
-
-                Console.WriteLine("-----------------------------");
-                Console.WriteLine("PRODUCTnr: ");
-                Console.WriteLine(productNumber + 1);
-                Console.WriteLine("GroundTruth: ");
-                Console.WriteLine(descriptions[productNumber].Correctness);
-                Console.WriteLine("Chat gpt :");
-                Console.WriteLine(messageContent);
-                Console.WriteLine("-----------------------------");
-
-                if (messageContent.Contains("correct", StringComparison.OrdinalIgnoreCase) && GroundTruth == "Correct")
-                {
-                    Console.WriteLine(1);
-                    truePositive++;
-                    batchResultsDetails[productNumber + 1][0]++;
-                }
-                else if (messageContent.Contains("correct", StringComparison.OrdinalIgnoreCase) && GroundTruth == "Wrong")
-                {
-                    Console.WriteLine(2);
-                    falsePositive++;
-                    batchResultsDetails[productNumber + 1][1]++;
-                }
-                else if (messageContent.Contains("wrong", StringComparison.OrdinalIgnoreCase) && GroundTruth == "Wrong")
-                {
-                    Console.WriteLine(3);
-                    trueNegative++;
-                     batchResultsDetails[productNumber + 1][2]++;
-                }
-                else if (messageContent.Contains("wrong", StringComparison.OrdinalIgnoreCase) && GroundTruth == "Correct")
-                {
-                    Console.WriteLine(4);
-                    falseNegative++;
-                   batchResultsDetails[productNumber + 1][3]++;
-                }
-            }
-        }
-
-        double accuracy = (truePositive + trueNegative) / (totalProductDescriptions * _totalIterations);
-        Console.WriteLine($"truePositive = {truePositive}, trueNegative: {trueNegative}, falsePositive: {falsePositive}, falseNegative: {falseNegative},  totalProductDescriptions: {totalProductDescriptions * _totalIterations} = {accuracy}" );
-        // Write all results to CSV at once
-        _csvHandler.WriteConfusionMatrixResultsToCSV(accuracy, _resultsConfusionMatrixFilePath, assessmentType, _GptModel);
-        _csvHandler.WriteConfusionMatrixDetailsToCSV(batchResultsDetails, _resultsFilePath);
-        return Ok();
-    }
-
-
-    private async Task<string> AssessDescriptionAsync(ProductDescription productInfo)
-    {
-        // string systemMessage = "Assess if the following text contains any spelling, grammatical, or punctuation errors. Only return 'Wrong' if the text needs corrections, and 'correct' if the text is correct.";
-        // double temperature = 1;
-        // try
-        // {
-        //     return await _openAIApiService.CreateChatCompletionAsync(systemMessage, productInfo.Description, temperature);
-        // }
-        string systemMessage = $"Kontrollera om följande produktbeskrivning är övertygande eller inte övertygande, ta hänsyn till etiska aspekter gällande marknadsföring. Returnera endast \'correct\' om du anser att texten är övertygande utan att ge några ytterligare kommentarer eller detaljer. Returnera endast \"wrong\" om du anser att texten inte är övertygande utan att ge några ytterligare kommentarer eller detaljer. Jag är intresserad av att förstå om texten effektivt lockar kunden och framhäver produkten på ett positivt sätt. Tack!";
+  private async Task<string> AssessDescriptionAsync(ProductDescription productInfo)
+  {
+    string systemMessage = $"Kontrollera om följande produktbeskrivning är övertygande eller inte övertygande, ta hänsyn till etiska aspekter gällande marknadsföring. Returnera endast \'correct\' om du anser att texten är övertygande utan att ge några ytterligare kommentarer eller detaljer. Returnera endast \"wrong\" om du anser att texten inte är övertygande utan att ge några ytterligare kommentarer eller detaljer. Jag är intresserad av att förstå om texten effektivt lockar kunden och framhäver produkten på ett positivt sätt. Tack!";
     double temperature = 1;
     try
     {
@@ -141,24 +100,24 @@ public class AssessEthicsController : ControllerBase
 
       return await _openAIApiService.CreateChatCompletionAsync(systemMessage, prompt, temperature);
     }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error calling the OpenAI service: {ex.Message}");
-            return null;
-        }
-    }
-
-    private string ParseApiResponse(string response)
+    catch (Exception ex)
     {
-        try
-        {
-            var parsedResponse = JsonConvert.DeserializeObject<ApiResponse>(response);
-            return parsedResponse?.choices?[0]?.message?.content ?? "No response";
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error parsing response: {ex.Message}");
-            return "Error parsing response";
-        }
+      Console.WriteLine($"Error calling the OpenAI service: {ex.Message}");
+      return null;
     }
+  }
+
+  private string ParseApiResponse(string response)
+  {
+    try
+    {
+      var parsedResponse = JsonConvert.DeserializeObject<ApiResponse>(response);
+      return parsedResponse?.choices?[0]?.message?.content ?? "No response";
+    }
+    catch (Exception ex)
+    {
+      Console.WriteLine($"Error parsing response: {ex.Message}");
+      return "Error parsing response";
+    }
+  }
 }
