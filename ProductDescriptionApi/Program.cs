@@ -1,22 +1,15 @@
 using System.Net.Http.Headers;
 using ProductDescriptionApi.Services;
+using ProductDescriptionApi.Controllers;
 
-// Create a WebApplicationBuilder object
-// to configure the how the ASP.NET service runs
-// **********************************************
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
-// Add and Configure Services
-// **********************************************
-
 
 // Configure ASP.NET to use the Controller model
 builder.Services.AddControllers();
 
 // Configure Open API (Swagger)
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -27,11 +20,10 @@ builder.Services.AddSingleton<CsvHandler>();
 
 builder.Services.Configure<OpenAIServiceOptions>(builder.Configuration.GetSection("OpenAI"));
 
-
-    // Other client configuration if necessary
-
-
-
+// Register the assessors as services
+builder.Services.AddScoped<AssessConstraintsController>();
+builder.Services.AddScoped<AssessEthicsController>();
+builder.Services.AddScoped<AssessLanguageController>();
 
 // **********************************************
 // After adding and configuring services

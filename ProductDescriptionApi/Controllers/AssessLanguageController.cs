@@ -59,12 +59,6 @@ public class AssessLanguageController : ControllerBase
 
 
       var messageContent = ParseApiResponse(response);
-      Console.WriteLine("-----------------------------");
-      Console.WriteLine("PRODUCTnr: ");
-      Console.WriteLine(productNumber + 1);
-      Console.WriteLine("Chat gpt :");
-      Console.WriteLine(messageContent);
-      Console.WriteLine("-----------------------------");
 
       if (messageContent.Contains("correct", StringComparison.OrdinalIgnoreCase))
       {
@@ -81,6 +75,13 @@ public class AssessLanguageController : ControllerBase
 
     _csvHandler.WriteAssessmentsResultsToCSV(batchResultsDetails, _resultsFilePath);
     return Ok();
+  }
+
+  [NonAction]
+  public async Task<string> AssessSingleDescription(ProductDescription productDescription)
+  {
+    var response = await AssessDescriptionAsync(productDescription);
+    return response == null ? "Error" : ParseApiResponse(response);
   }
 
 

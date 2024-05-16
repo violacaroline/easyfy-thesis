@@ -42,11 +42,12 @@ public class AssessConstraintsController : ControllerBase
   [HttpPost("assess")]
   public async Task<IActionResult> AssessDescriptions()
   {
-    // List to store results for batch writing: (Product Number, Product Description, Evaluation)
-    var batchResultsDetails = new List<Tuple<int, string, string>>();
 
     // Read descriptions from CSV
     List<ProductDescription> descriptionsAndAttributes = _csvHandler.ReadDescriptionsAndAttributesFromCSV(_inputFilePath);
+
+    // List to store results for batch writing: (Product Number, Product Description, Evaluation)
+    var batchResultsDetails = new List<Tuple<int, string, string>>();
 
     // Assess each description
     for (int productNumber = 0; productNumber < descriptionsAndAttributes.Count; productNumber++)
@@ -59,12 +60,7 @@ public class AssessConstraintsController : ControllerBase
         continue;
       }
       var messageContent = ParseApiResponse(response);
-      Console.WriteLine("-----------------------------");
-      Console.WriteLine("Product: ");
-      Console.WriteLine(productNumber + 1);
-      Console.WriteLine("Chat GPT:");
-      Console.WriteLine(messageContent);
-      Console.WriteLine("-----------------------------");
+
       if (messageContent.Contains("correct", StringComparison.OrdinalIgnoreCase))
       {
         Console.WriteLine("The product description adheres to the constraints");
@@ -83,7 +79,12 @@ public class AssessConstraintsController : ControllerBase
     return Ok();
   }
 
-
+  [NonAction]
+  public async Task<string> AssessSingleDescription(ProductDescription productDescription)
+  {
+    var response = await AssessDescriptionAsync(productDescription);
+    return response == null ? "Error" : ParseApiResponse(response);
+  }
 
   private async Task<string> AssessDescriptionAsync(ProductDescription productInfo)
   {

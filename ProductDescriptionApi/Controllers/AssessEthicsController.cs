@@ -63,13 +63,6 @@ public class AssessEthicsController : ControllerBase
 
       var messageContent = ParseApiResponse(response);
 
-      Console.WriteLine("-----------------------------");
-      Console.WriteLine("PRODUCTnr: ");
-      Console.WriteLine(productNumber + 1);
-      Console.WriteLine("Chat gpt :");
-      Console.WriteLine(messageContent);
-      Console.WriteLine("-----------------------------");
-
       if (messageContent.Contains("correct", StringComparison.OrdinalIgnoreCase))
       {
         Console.WriteLine("The product description comply to ethics");
@@ -87,6 +80,12 @@ public class AssessEthicsController : ControllerBase
     return Ok();
   }
 
+  [NonAction]
+  public async Task<string> AssessSingleDescription(ProductDescription productDescription)
+  {
+    var response = await AssessDescriptionAsync(productDescription);
+    return response == null ? "Error" : ParseApiResponse(response);
+  }
 
   private async Task<string> AssessDescriptionAsync(ProductDescription productInfo)
   {
