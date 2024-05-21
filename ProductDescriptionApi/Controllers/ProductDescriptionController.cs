@@ -48,7 +48,7 @@ namespace ProductDescriptionApi.Controllers
         public async Task<IActionResult> GenerateDescription([FromBody] ProductDescriptionRequest request)
         {
             // Ensure that the request parameters are not null
-            string systemMessage = "You will be provided with a product name delimited by triple quotes and seed words that you will use to generate the description of the product. The description should follow the following constraints: it should be 5 sentences long, it should be compelling, it should be written in Swedish";
+            string systemMessage = request.SystemMessage ?? "string";
             string userMessage = request.UserMessage ?? "Default User Message";
             string temp = request.Temperature ?? "0.7";
             string attributes = request.Attributes ?? "";
@@ -61,15 +61,6 @@ namespace ProductDescriptionApi.Controllers
 
             int attempt = 0;
             const int maxAttempts = 3;
-
-            // To store the best result
-            var bestResult = new
-            {
-                Description = "",
-                ConstraintsEvaluation = "incorrect",
-                EthicsEvaluation = "incorrect",
-                LanguageEvaluation = "incorrect"
-            };
 
             do
             {
@@ -92,45 +83,22 @@ namespace ProductDescriptionApi.Controllers
                 languageEvaluation = await _assessLanguageController.AssessSingleDescription(new ProductDescription(messageContent));
 
                 // Log the results to the console
-                Console.WriteLine($"Attempt number: {attempt}");
                 Console.WriteLine("Generated Product Description:");
                 Console.WriteLine(messageContent);
                 Console.WriteLine("Constraints Evaluation: " + constraintsEvaluation);
                 Console.WriteLine("Ethics Evaluation: " + ethicsEvaluation);
                 Console.WriteLine("Language Evaluation: " + languageEvaluation);
+            } while ((constraintsEvaluation.ToLower() != "correct" || ethicsEvaluation.ToLower() != "correct" || languageEvaluation.ToLower() != "correct") && attempt < maxAttempts);
+            // Return the evaluation results
+            var result = new
+            {
+                Description = messageContent.ToLower(),
+                ConstraintsEvaluation = constraintsEvaluation.ToLower(),
+                EthicsEvaluation = ethicsEvaluation.ToLower(),
+                LanguageEvaluation = languageEvaluation.ToLower()
+            };
 
-                if (constraintsEvaluation.ToLower() == "correct" &&
-                    ethicsEvaluation.ToLower() == "correct" &&
-                    languageEvaluation.ToLower() == "correct")
-                {
-                    bestResult = new
-                    {
-                        Description = messageContent.ToLower(),
-                        ConstraintsEvaluation = constraintsEvaluation.ToLower(),
-                        EthicsEvaluation = ethicsEvaluation.ToLower(),
-                        LanguageEvaluation = languageEvaluation.ToLower()
-                    };
-                    break; // If we have a perfect result, no need to continue
-                }
-                else if (constraintsEvaluation.ToLower() == "correct" ||
-                         ethicsEvaluation.ToLower() == "correct" ||
-                         languageEvaluation.ToLower() == "correct")
-                {
-                    bestResult = new
-                    {
-                        Description = messageContent.ToLower(),
-                        ConstraintsEvaluation = constraintsEvaluation.ToLower(),
-                        EthicsEvaluation = ethicsEvaluation.ToLower(),
-                        LanguageEvaluation = languageEvaluation.ToLower()
-                    };
-                }
-            } while ((constraintsEvaluation.ToLower() != "correct" || 
-                      ethicsEvaluation.ToLower() != "correct" || 
-                      languageEvaluation.ToLower() != "correct") && 
-                     attempt < maxAttempts);
-
-            // Return the best result found
-            return Ok(bestResult);
+            return Ok(result);
         }
 
         private void WriteToCSV(string text, string filePath)
