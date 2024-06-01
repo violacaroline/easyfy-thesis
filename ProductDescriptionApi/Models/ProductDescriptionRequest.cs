@@ -7,9 +7,7 @@ namespace ProductDescriptionApi.Models
 {
     public class ProductDescriptionRequest
     {
-        public string? SystemMessage { get; set; }
-        public string? UserMessage { get; set; }
-        public string? Attributes { get; set; }
+        public string? productAttributes { get; set; }
         public string? Temperature { get; set; }
     }
 }
