@@ -17,6 +17,15 @@ public class ProductDescriptionService
 
     public async Task<string> GenerateProductDescriptionAsync(string productName, string keywords)
     {
+         if (string.IsNullOrWhiteSpace(productName))
+        {
+            return "Product Name cannot be empty.";
+        }
+
+        if (string.IsNullOrWhiteSpace(keywords))
+        {
+            return "Product Attributes cannot be empty.";
+        }
         try
         {
             // var formattedTemperature = temperature.Replace(',', '.');
