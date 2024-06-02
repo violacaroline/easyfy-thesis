@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using ProductDescriptionApi.Models;
 namespace ProductDescriptionApi.Controllers;
+using ProductDescriptionApi.Services;
 
 [ApiController]
 [Route("constraints-assessment")]
@@ -9,19 +10,21 @@ namespace ProductDescriptionApi.Controllers;
 public class AssessConstraintsController : ControllerBase
 
 {
-  private readonly OpenAIService _openAIApiService;
+  private readonly PDEService _pdeService;
 
-  // Constructor injection of OpenAIApiService
-  public AssessConstraintsController(OpenAIService openAIApiService)
+  public AssessConstraintsController(PDEService pdeService)
   {
-    _openAIApiService = openAIApiService;
+    _pdeService = pdeService;
   }
 
   [HttpPost("assess")]
   public async Task<IActionResult> AssessDescriptions([FromBody] ProductDescription request)
   {
-    var response = await AssessDescriptionAsync(request);
-    var messageContent = ParseApiResponse(response);
+    string systemMessage = $"Vänligen verifiera att den tillhandahållna texten innehåller alla de angivna orden, fraserna och formuleringarna som listas i [{request.Attributes}], eller deras synonymer och andra formuleringar som förmedlar samma betydelse. Svara med 'correct' om texten innehåller motsvarigheter för varje punkt på listan, antingen som specificerat eller genom godtagbara alternativ. Svara med 'wrong' om någon motsvarighet saknas eller inte adekvat förmedlar samma betydelse. Undvik att ge några ytterligare kommentarer eller detaljer.";
+
+    string constraintPD = $"Text: {request.Description}";
+    var messageContent = await _pdeService.AssessDescriptionAsync(request, systemMessage, constraintPD);
+
 
     Console.WriteLine("-----------------------------");
     Console.WriteLine("PD: ");
@@ -40,41 +43,6 @@ public class AssessConstraintsController : ControllerBase
       return Ok("Wrong");
     }
     return Ok();
-  }
-
-
-
-  private async Task<string> AssessDescriptionAsync(ProductDescription productInfo)
-  {
-    string systemMessage = $"Vänligen verifiera att den tillhandahållna texten innehåller alla de angivna orden, fraserna och formuleringarna som listas i [{productInfo.Attributes}], eller deras synonymer och andra formuleringar som förmedlar samma betydelse. Svara med 'correct' om texten innehåller motsvarigheter för varje punkt på listan, antingen som specificerat eller genom godtagbara alternativ. Svara med 'wrong' om någon motsvarighet saknas eller inte adekvat förmedlar samma betydelse. Undvik att ge några ytterligare kommentarer eller detaljer.";
-    double temperature = 1;
-    try
-    {
-
-      string prompt = $"Text: {productInfo.Description}";
-      Console.WriteLine($"Prompt: {prompt}");
-
-      return await _openAIApiService.CreateChatCompletionAsync(systemMessage, prompt, temperature);
-    }
-    catch (Exception ex)
-    {
-      Console.WriteLine($"Error calling the OpenAI service: {ex.Message}");
-      return null; // Return null or handle differently based on your error handling strategy.
-    }
-  }
-
-  private string ParseApiResponse(string response)
-  {
-    try
-    {
-      var parsedResponse = JsonConvert.DeserializeObject<ApiResponse>(response);
-      return parsedResponse?.choices?[0]?.message?.content ?? "No response";
-    }
-    catch (Exception ex)
-    {
-      Console.WriteLine($"Error parsing response: {ex.Message}");
-      return "Error parsing response"; // Consider how you want to handle parse errors.
-    }
   }
 
 }

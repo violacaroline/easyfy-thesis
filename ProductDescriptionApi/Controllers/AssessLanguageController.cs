@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
 using ProductDescriptionApi.Models;
+using ProductDescriptionApi.Services;
 
 namespace ProductDescriptionApi.Controllers
 {
@@ -11,18 +12,19 @@ namespace ProductDescriptionApi.Controllers
     [Route("language-assessment")]
     public class AssessLanguageController : ControllerBase
     {
-        private readonly OpenAIService _openAIApiService;
+        private readonly PDEService _pdeService;
 
-        public AssessLanguageController(OpenAIService openAIApiService)
+        public AssessLanguageController(PDEService pdeService)
         {
-            _openAIApiService = openAIApiService;
+            _pdeService = pdeService;
         }
 
         [HttpPost("assess")]
         public async Task<IActionResult> AssessDescriptions([FromBody] ProductDescription request)
         {
-            var response = await AssessDescriptionAsync(request);
-            var messageContent = ParseApiResponse(response);
+            string systemMessage = "Bedöm om följande text innehåller några stavfel, grammatiska fel eller fel skiljetecken. Säkerställ att possessiva pronomenen passar substantiven. Returnera endast 'Wrong' om texten behöver korrigeringar, och 'Correct' om texten är korrekt. utan att ge några ytterligare kommentarer eller detaljer.";
+
+            var messageContent = await _pdeService.AssessDescriptionAsync(request, systemMessage);
 
             Console.WriteLine("-----------------------------");
             Console.WriteLine("Chat gpt :");
@@ -41,35 +43,6 @@ namespace ProductDescriptionApi.Controllers
             }
 
             return Ok();
-        }
-
-        private async Task<string> AssessDescriptionAsync(ProductDescription productDescription)
-        {
-            string systemMessage = "Bedöm om följande text innehåller några stavfel, grammatiska fel eller fel skiljetecken. Säkerställ att possessiva pronomenen passar substantiven. Returnera endast 'Wrong' om texten behöver korrigeringar, och 'Correct' om texten är korrekt. utan att ge några ytterligare kommentarer eller detaljer.";
-            double temperature = 1;
-            try
-            {
-                return await _openAIApiService.CreateChatCompletionAsync(systemMessage, productDescription.Description, temperature);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error calling the OpenAI service: {ex.Message}");
-                return null;
-            }
-        }
-
-        private string ParseApiResponse(string response)
-        {
-           try
-            {
-                var parsedResponse = JsonSerializer.Deserialize<ApiResponse>(response);
-                return parsedResponse?.choices?[0]?.message?.content ?? "No response";
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error parsing response: {ex.Message}");
-                return "Error parsing response";
-            }
         }
     }
 }

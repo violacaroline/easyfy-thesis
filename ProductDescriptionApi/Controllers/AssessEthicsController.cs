@@ -5,26 +5,26 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
+using ProductDescriptionApi.Services;
+
 namespace ProductDescriptionApi.Controllers;
 
 [ApiController]
 [Route("compelling-assessment")]
 public class AssessEthicsController : ControllerBase
 {
-  private readonly OpenAIService _openAIApiService;
-
-  public AssessEthicsController( OpenAIService openAIApiService)
+private readonly PDEService _pdeService;
+  public AssessEthicsController(PDEService pdeService)
   {
-    _openAIApiService = openAIApiService;
+    _pdeService = pdeService;
   }
 
   [HttpPost("assess")]
   public async Task<IActionResult> AssessDescriptions([FromBody] ProductDescription request)
   {
+    string systemMessage = $"Kontrollera om följande produktbeskrivning är övertygande eller inte övertygande, ta hänsyn till etiska aspekter gällande marknadsföring. Returnera endast \'correct\' om du anser att texten är övertygande utan att ge några ytterligare kommentarer eller detaljer. Returnera endast \"wrong\" om du anser att texten inte är övertygande utan att ge några ytterligare kommentarer eller detaljer. Jag är intresserad av att förstå om texten effektivt lockar kunden och framhäver produkten på ett positivt sätt. Tack!";
 
-    var response = await AssessDescriptionAsync(request);
-
-    var messageContent = ParseApiResponse(response);
+     var messageContent = await _pdeService.AssessDescriptionAsync(request, systemMessage);
 
     Console.WriteLine("-----------------------------");
     Console.WriteLine("PD: ");
@@ -45,40 +45,5 @@ public class AssessEthicsController : ControllerBase
       return Ok("Wrong");
     }
     return Ok();
-  }
-
-
-
-  private async Task<string> AssessDescriptionAsync(ProductDescription productInfo)
-  {
-    string systemMessage = $"Kontrollera om följande produktbeskrivning är övertygande eller inte övertygande, ta hänsyn till etiska aspekter gällande marknadsföring. Returnera endast \'correct\' om du anser att texten är övertygande utan att ge några ytterligare kommentarer eller detaljer. Returnera endast \"wrong\" om du anser att texten inte är övertygande utan att ge några ytterligare kommentarer eller detaljer. Jag är intresserad av att förstå om texten effektivt lockar kunden och framhäver produkten på ett positivt sätt. Tack!";
-    double temperature = 1;
-    try
-    {
-
-      string prompt = $"Produktbeskrivningen: {productInfo.Description}.";
-      Console.WriteLine($"Prompt: {prompt}");
-
-      return await _openAIApiService.CreateChatCompletionAsync(systemMessage, prompt, temperature);
-    }
-    catch (Exception ex)
-    {
-      Console.WriteLine($"Error calling the OpenAI service: {ex.Message}");
-      return null;
-    }
-  }
-
-  private string ParseApiResponse(string response)
-  {
-    try
-    {
-      var parsedResponse = JsonConvert.DeserializeObject<ApiResponse>(response);
-      return parsedResponse?.choices?[0]?.message?.content ?? "No response";
-    }
-    catch (Exception ex)
-    {
-      Console.WriteLine($"Error parsing response: {ex.Message}");
-      return "Error parsing response";
-    }
   }
 }

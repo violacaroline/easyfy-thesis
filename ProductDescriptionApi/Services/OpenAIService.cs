@@ -6,10 +6,10 @@ using Microsoft.Extensions.Options;
 
 public class OpenAIService
 {
-   private readonly HttpClient _httpClient;
+    private readonly HttpClient _httpClient;
     private readonly string _apiKey;
     private readonly string _GptModel;
-    
+
     private readonly IConfiguration _configuration;
 
     public OpenAIService(HttpClient httpClient, IOptions<OpenAIServiceOptions> options, IConfiguration configuration)
@@ -21,41 +21,41 @@ public class OpenAIService
         _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
         _GptModel = _configuration["GptModel"];
     }
-public async Task<string> CreateChatCompletionAsync(string systemMessage, string userMessage, double temperature)
-{
-    var requestBody = new
+    public async Task<string> CreateChatCompletionAsync(string systemMessage, string userMessage, double temperature)
     {
-        // model = "gpt-4-0125-preview", // Use the latest model available to you.
-        model = _GptModel, // Use the latest model available to you.
-        messages = new[]
+        var requestBody = new
         {
+            // model = "gpt-4-0125-preview", // Use the latest model available to you.
+            model = _GptModel, // Use the latest model available to you.
+            messages = new[]
+            {
             new { role = "system", content = systemMessage },
             new { role = "user", content = userMessage }
         },
-        temperature = temperature,
-        n = 1
-    };
+            temperature = temperature,
+            n = 1
+        };
 
-    Console.WriteLine($"----------------------------------------------");
-    Console.WriteLine($"request.temperature:{requestBody.temperature}");
-    Console.WriteLine($"----------------------------------------------");
+        Console.WriteLine($"----------------------------------------------");
+        Console.WriteLine($"request.temperature:{requestBody.temperature}");
+        Console.WriteLine($"----------------------------------------------");
 
-    string jsonContent = JsonConvert.SerializeObject(requestBody);
+        string jsonContent = JsonConvert.SerializeObject(requestBody);
 
-    var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+        var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-    HttpResponseMessage response = await _httpClient.PostAsync("https://api.openai.com/v1/chat/completions", content);
-    if (response.IsSuccessStatusCode)
-    {
-        string responseContent = await response.Content.ReadAsStringAsync();
+        HttpResponseMessage response = await _httpClient.PostAsync("https://api.openai.com/v1/chat/completions", content);
+        if (response.IsSuccessStatusCode)
+        {
+            string responseContent = await response.Content.ReadAsStringAsync();
 
-        return responseContent;
+            return responseContent;
+        }
+        else
+        {
+            string errorContent = await response.Content.ReadAsStringAsync();
+            throw new HttpRequestException($"Error calling OpenAI API: {errorContent}");
+        }
     }
-    else
-    {
-        string errorContent = await response.Content.ReadAsStringAsync();
-        throw new HttpRequestException($"Error calling OpenAI API: {errorContent}");
-    }
-}
 
 }
