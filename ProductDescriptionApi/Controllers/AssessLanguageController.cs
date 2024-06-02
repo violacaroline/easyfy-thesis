@@ -26,25 +26,9 @@ namespace ProductDescriptionApi.Controllers
 
             string productDescription = request.Description;
 
-            var messageContent = await _pdeService.AssessDescriptionAsync(assessingPrompt, productDescription);
+            var productDescriptionEvaluation = await _pdeService.AssessDescriptionAsync(assessingPrompt, productDescription);
 
-            Console.WriteLine("-----------------------------");
-            Console.WriteLine("Chat gpt :");
-            Console.WriteLine(messageContent);
-            Console.WriteLine("-----------------------------");
-
-            if (messageContent.Contains("correct", StringComparison.OrdinalIgnoreCase))
-            {
-                Console.WriteLine("The product description is linguistically correct");
-                return Ok("Correct");
-            }
-            else if (messageContent.Contains("wrong", StringComparison.OrdinalIgnoreCase))
-            {
-                Console.WriteLine("The product description can contain one or more language error");
-                return Ok("Wrong");
-            }
-
-            return Ok();
+            return Ok(productDescriptionEvaluation);
         }
     }
 }

@@ -10,10 +10,10 @@ using ProductDescriptionApi.Services;
 namespace ProductDescriptionApi.Controllers;
 
 [ApiController]
-[Route("compelling-assessment")]
+[Route("ethics-assessment")]
 public class AssessEthicsController : ControllerBase
 {
-private readonly PDEService _pdeService;
+  private readonly PDEService _pdeService;
   public AssessEthicsController(PDEService pdeService)
   {
     _pdeService = pdeService;
@@ -26,26 +26,8 @@ private readonly PDEService _pdeService;
 
     string productDescription = request.Description;
 
-     var messageContent = await _pdeService.AssessDescriptionAsync(assessingPrompt, productDescription);
+    var productDescriptionEvaluation = await _pdeService.AssessDescriptionAsync(assessingPrompt, productDescription);
 
-    Console.WriteLine("-----------------------------");
-    Console.WriteLine("PD: ");
-    Console.WriteLine(request.Description);
-    Console.WriteLine("Chat gpt :");
-    Console.WriteLine(messageContent);
-    Console.WriteLine("-----------------------------");
-
-    if (messageContent.Contains("correct", StringComparison.OrdinalIgnoreCase))
-    {
-      Console.WriteLine("The product description comply to ethics");
-      return Ok("Correct");
-    }
-
-    else if (messageContent.Contains("wrong", StringComparison.OrdinalIgnoreCase))
-    {
-      Console.WriteLine("The product description can contain an ethical error");
-      return Ok("Wrong");
-    }
-    return Ok();
+    return Ok(productDescriptionEvaluation);
   }
 }

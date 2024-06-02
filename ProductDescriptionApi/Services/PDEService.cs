@@ -27,7 +27,8 @@ namespace ProductDescriptionApi.Services
             try
             {
                 var response = await _openAIApiService.CreateChatCompletionAsync(systemMessage, userMessage, Temperature);
-                return ParseApiResponse(response);
+                string messageContent = ParseApiResponse(response);
+                return EvaluatePD(messageContent);
             }
             catch (Exception ex)
             {
@@ -48,6 +49,19 @@ namespace ProductDescriptionApi.Services
                 Console.WriteLine($"Error parsing response: {ex.Message}");
                 return "Error parsing response";
             }
+        }
+
+        private string EvaluatePD(string messageContent)
+        {
+            if (messageContent.Contains("correct", StringComparison.OrdinalIgnoreCase))
+            {
+                return "Correct";
+            }
+            else if (messageContent.Contains("wrong", StringComparison.OrdinalIgnoreCase))
+            {
+                return "Wrong";
+            }
+            return "Unknown";
         }
 
     }
