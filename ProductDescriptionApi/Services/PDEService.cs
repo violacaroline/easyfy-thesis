@@ -1,23 +1,22 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Text.Json;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using ProductDescriptionApi.Models;
-using System.Data;
 
 namespace ProductDescriptionApi.Services
 {
     public class PDEService
     {
         private readonly OpenAIService _openAIApiService;
-        private double Temperature = 1;
+        private readonly ILogger<PDEService> _logger;
+        private readonly double _temperature;
 
-        public PDEService(OpenAIService openAIApiService)
+        public PDEService(OpenAIService openAIApiService, ILogger<PDEService> logger)
         {
             _openAIApiService = openAIApiService;
+            _logger = logger;
         }
-
 
         public async Task<string> AssessDescriptionAsync(string assessingPrompt, string productDescription)
         {
@@ -26,14 +25,14 @@ namespace ProductDescriptionApi.Services
 
             try
             {
-                var response = await _openAIApiService.CreateChatCompletionAsync(systemMessage, userMessage, Temperature);
+                var response = await _openAIApiService.CreateChatCompletionAsync(systemMessage, userMessage, _temperature);
                 string messageContent = ParseApiResponse(response);
                 return EvaluatePD(messageContent);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error calling the OpenAI service: {ex.Message}");
-                return null;
+                _logger.LogError(ex, "Error calling the OpenAI service.");
+                return "Error calling the OpenAI service.";
             }
         }
 
@@ -46,8 +45,8 @@ namespace ProductDescriptionApi.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error parsing response: {ex.Message}");
-                return "Error parsing response";
+                _logger.LogError(ex, "Error parsing response.");
+                return "Error parsing response.";
             }
         }
 
@@ -63,6 +62,5 @@ namespace ProductDescriptionApi.Services
             }
             return "Unknown";
         }
-
     }
 }
