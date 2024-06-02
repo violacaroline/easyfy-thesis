@@ -7,24 +7,24 @@ using Newtonsoft.Json;
 public class ProductDescriptionService
 {
     private readonly HttpClient _httpClient;
+    private readonly string _apiBaseUrl;
 
-    public ProductDescriptionService(HttpClient httpClient)
+    public ProductDescriptionService(HttpClient httpClient, IConfiguration configuration)
     {
         _httpClient = httpClient;
+        _apiBaseUrl = configuration.GetValue<string>("APIBaseUrl") ?? throw new ArgumentNullException("APIBaseUrl");
     }
 
-    public async Task<string> GenerateProductDescriptionAsync(string productName, string keywords, string systemMessage, string temperature)
+    public async Task<string> GenerateProductDescriptionAsync(string productName, string keywords)
     {
         try
         {
-            var formattedTemperature = temperature.Replace(',', '.');
+            // var formattedTemperature = temperature.Replace(',', '.');
 
-            var response = await _httpClient.PostAsJsonAsync("http://localhost:5000/product-description/generate", new
+            var response = await _httpClient.PostAsJsonAsync($"{_apiBaseUrl}/product-description/generate", new
             {
-                temperature = formattedTemperature,
-                systemMessage = systemMessage,
-                userMessage = $"\"\"\"{productName}\"\"\"{keywords}",
-                attributes = $"{productName}, {keywords}"
+                productAttributes = $"___{productName}___{keywords}",
+                temperature = "1.0"
             });
 
             if (response.IsSuccessStatusCode)

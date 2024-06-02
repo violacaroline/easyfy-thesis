@@ -6,7 +6,6 @@
 
 
 <div>
-    <p>Current Temperature: @temperature</p>
     <TextInput Label="Product Name:" @bind-Value="productName" />
     <TextArea Label="Product Attributes:" @bind-Value="keywords" />
 </div>
@@ -28,9 +27,6 @@
     private string? keywords = "";
     private string? productName = "";
     private bool isLoading = false;
-    private string temperature = "1.0"; 
-
-    private static readonly string systemMessage = "You will be provided with a product name delimited by triple quotes and seed words that you will use to generate the description of the product. The description should follow the following constraints: it should be 5 sentences long, it should be compelling, it should be written in Swedish";
 
     /// <summary>
     /// Makes request to generate description.
@@ -41,11 +37,9 @@
         isLoading = true;
         try
         {
-            textToOutput = await ProductDescriptionService.GenerateProductDescriptionAsync(
-                productName ?? string.Empty, 
-                keywords ?? string.Empty, 
-                systemMessage ?? string.Empty, 
-                temperature);
+             textToOutput = await ProductDescriptionService.GenerateProductDescriptionAsync(
+                    productName ?? string.Empty,
+                    keywords ?? string.Empty);
         }
         finally
         {
