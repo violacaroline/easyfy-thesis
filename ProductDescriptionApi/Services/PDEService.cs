@@ -19,13 +19,14 @@ namespace ProductDescriptionApi.Services
         }
 
 
-        public async Task<string> AssessDescriptionAsync(ProductDescription productInfo, string assessingPrompt)
+        public async Task<string> AssessDescriptionAsync(string assessingPrompt, string productDescription)
         {
             string systemMessage = assessingPrompt;
-            
+            string userMessage = productDescription;
+
             try
             {
-                var response = await _openAIApiService.CreateChatCompletionAsync(systemMessage, productInfo.Description, Temperature);
+                var response = await _openAIApiService.CreateChatCompletionAsync(systemMessage, userMessage, Temperature);
                 return ParseApiResponse(response);
             }
             catch (Exception ex)
@@ -35,24 +36,6 @@ namespace ProductDescriptionApi.Services
             }
         }
 
-        public async Task<string> AssessDescriptionAsync(ProductDescription productInfo, string assessingPrompt, string constraintPD)
-        {
-            string systemMessage = assessingPrompt;
-            try
-            {
-
-                string prompt = $"Text: {productInfo.Description}";
-                Console.WriteLine($"Prompt: {prompt}");
-
-               var response = await _openAIApiService.CreateChatCompletionAsync(systemMessage, prompt, Temperature);
-                return ParseApiResponse(response);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error calling the OpenAI service: {ex.Message}");
-                return null; // Return null or handle differently based on your error handling strategy.
-            }
-        }
         private string ParseApiResponse(string response)
         {
             try

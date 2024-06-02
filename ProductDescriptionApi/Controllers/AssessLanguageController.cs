@@ -22,9 +22,11 @@ namespace ProductDescriptionApi.Controllers
         [HttpPost("assess")]
         public async Task<IActionResult> AssessDescriptions([FromBody] ProductDescription request)
         {
-            string systemMessage = "Bedöm om följande text innehåller några stavfel, grammatiska fel eller fel skiljetecken. Säkerställ att possessiva pronomenen passar substantiven. Returnera endast 'Wrong' om texten behöver korrigeringar, och 'Correct' om texten är korrekt. utan att ge några ytterligare kommentarer eller detaljer.";
+            string assessingPrompt = "Bedöm om följande text innehåller några stavfel, grammatiska fel eller fel skiljetecken. Säkerställ att possessiva pronomenen passar substantiven. Returnera endast 'Wrong' om texten behöver korrigeringar, och 'Correct' om texten är korrekt. utan att ge några ytterligare kommentarer eller detaljer.";
 
-            var messageContent = await _pdeService.AssessDescriptionAsync(request, systemMessage);
+            string productDescription = request.Description;
+
+            var messageContent = await _pdeService.AssessDescriptionAsync(assessingPrompt, productDescription);
 
             Console.WriteLine("-----------------------------");
             Console.WriteLine("Chat gpt :");

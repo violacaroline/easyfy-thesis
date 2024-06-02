@@ -22,9 +22,11 @@ private readonly PDEService _pdeService;
   [HttpPost("assess")]
   public async Task<IActionResult> AssessDescriptions([FromBody] ProductDescription request)
   {
-    string systemMessage = $"Kontrollera om följande produktbeskrivning är övertygande eller inte övertygande, ta hänsyn till etiska aspekter gällande marknadsföring. Returnera endast \'correct\' om du anser att texten är övertygande utan att ge några ytterligare kommentarer eller detaljer. Returnera endast \"wrong\" om du anser att texten inte är övertygande utan att ge några ytterligare kommentarer eller detaljer. Jag är intresserad av att förstå om texten effektivt lockar kunden och framhäver produkten på ett positivt sätt. Tack!";
+    string assessingPrompt = $"Kontrollera om följande produktbeskrivning är övertygande eller inte övertygande, ta hänsyn till etiska aspekter gällande marknadsföring. Returnera endast \'correct\' om du anser att texten är övertygande utan att ge några ytterligare kommentarer eller detaljer. Returnera endast \"wrong\" om du anser att texten inte är övertygande utan att ge några ytterligare kommentarer eller detaljer. Jag är intresserad av att förstå om texten effektivt lockar kunden och framhäver produkten på ett positivt sätt. Tack!";
 
-     var messageContent = await _pdeService.AssessDescriptionAsync(request, systemMessage);
+    string productDescription = request.Description;
+
+     var messageContent = await _pdeService.AssessDescriptionAsync(assessingPrompt, productDescription);
 
     Console.WriteLine("-----------------------------");
     Console.WriteLine("PD: ");
