@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using ProductDescriptionApi.Models;
-using ProductDescriptionApi.Services;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;

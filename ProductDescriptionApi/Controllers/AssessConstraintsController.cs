@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using ProductDescriptionApi.Models;
-using ProductDescriptionApi.Services;
 namespace ProductDescriptionApi.Controllers;
 
 [ApiController]
