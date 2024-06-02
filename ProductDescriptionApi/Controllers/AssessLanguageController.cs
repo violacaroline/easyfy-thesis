@@ -17,7 +17,15 @@ namespace ProductDescriptionApi.Controllers
             _logger = logger;
         }
 
+        /// <summary>
+        /// Assesses the product description for language correctness.
+        /// </summary>
+        /// <param name="request">The product description request.</param>
+        /// <returns>The assessment result.</returns>
         [HttpPost("assess")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> AssessDescriptions([FromBody] ProductDescription request)
         {
             if (request == null || string.IsNullOrEmpty(request.Description))
@@ -37,7 +45,7 @@ namespace ProductDescriptionApi.Controllers
                 if (productDescriptionEvaluation == null)
                 {
                     _logger.LogError("Error assessing product description: Evaluation returned null.");
-                    return StatusCode(500, "Error assessing product description.");
+                    return StatusCode(StatusCodes.Status500InternalServerError, "Error assessing product description.");
                 }
 
                 return Ok(productDescriptionEvaluation);
@@ -45,7 +53,7 @@ namespace ProductDescriptionApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Exception occurred while assessing product description.");
-                return StatusCode(500, "Internal server error occurred while assessing product description.");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Internal server error occurred while assessing product description.");
             }
         }
     }

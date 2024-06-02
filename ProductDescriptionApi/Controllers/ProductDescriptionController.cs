@@ -19,7 +19,15 @@ public class ProductDescriptionController : ControllerBase
     }
 
 
+    /// <summary>
+    /// Generates a product description based on provided attributes.
+    /// </summary>
+    /// <param name="request">The product description request.</param>
+    /// <returns>The generated product description.</returns>
     [HttpPost("generate")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GenerateDescription([FromBody] ProductDescriptionRequest request)
     {
         if (request == null || string.IsNullOrEmpty(request.productAttributes))
@@ -48,7 +56,7 @@ public class ProductDescriptionController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Exception occurred while generating product description.");
-            return StatusCode(500, "Internal server error occurred while generating product description.");
+            return StatusCode(StatusCodes.Status500InternalServerError, "Internal server error occurred while generating product description.");
         }
     }
 }
