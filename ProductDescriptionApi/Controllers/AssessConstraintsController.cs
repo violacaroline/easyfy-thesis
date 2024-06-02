@@ -10,76 +10,36 @@ namespace ProductDescriptionApi.Controllers;
 public class AssessConstraintsController : ControllerBase
 
 {
-  private readonly string _inputFilePath;
-  private readonly string _resultsFilePath;
-  private readonly string _resultsConfusionMatrixFilePath;
-  private readonly string? _GptModel;
-  private readonly int _totalIterations;
   private readonly OpenAIService _openAIApiService;
-  private readonly CsvHandler _csvHandler;
-  private readonly IConfiguration _configuration;
 
   // Constructor injection of OpenAIApiService
-  public AssessConstraintsController(IConfiguration configuration, OpenAIService openAIApiService, CsvHandler csvHandler)
+  public AssessConstraintsController(OpenAIService openAIApiService)
   {
-    _configuration = configuration;
     _openAIApiService = openAIApiService;
-    _csvHandler = csvHandler;
-    _inputFilePath = _configuration["InputFilePath:Constraints"];
-    _resultsFilePath = _configuration["ResultsFilePath:Constraints"];
-    _resultsConfusionMatrixFilePath = _configuration["ResultsFilePath:Results"];
-    _GptModel = _configuration["GptModel"];
-    _totalIterations = _configuration.GetValue<int>("TotalIterations");
-  }
-
-  [HttpGet]
-  public IActionResult Get()
-  {
-    var response = new { Message = "Hello! here can you assess your texts constraints" };
-    return Ok(response);
   }
 
   [HttpPost("assess")]
-  public async Task<IActionResult> AssessDescriptions()
+  public async Task<IActionResult> AssessDescriptions([FromBody] ProductDescription request)
   {
-    // List to store results for batch writing: (Product Number, Product Description, Evaluation)
-    var batchResultsDetails = new List<Tuple<int, string, string>>();
+    var response = await AssessDescriptionAsync(request);
+    var messageContent = ParseApiResponse(response);
 
-    // Read descriptions from CSV
-    List<ProductDescription> descriptionsAndAttributes = _csvHandler.ReadDescriptionsAndAttributesFromCSV(_inputFilePath);
-
-    // Assess each description
-    for (int productNumber = 0; productNumber < descriptionsAndAttributes.Count; productNumber++)
+    Console.WriteLine("-----------------------------");
+    Console.WriteLine("PD: ");
+    Console.WriteLine(request.Description);
+    Console.WriteLine("Chat GPT:");
+    Console.WriteLine(messageContent);
+    Console.WriteLine("-----------------------------");
+    if (messageContent.Contains("correct", StringComparison.OrdinalIgnoreCase))
     {
-      var response = await AssessDescriptionAsync(descriptionsAndAttributes[productNumber]);
-      if (response == null)
-      {
-        // Handle null responses. Here, adding "Error" to indicate a failed assessment.
-        batchResultsDetails.Add(Tuple.Create(productNumber + 1, descriptionsAndAttributes[productNumber].Description, "Error"));
-        continue;
-      }
-      var messageContent = ParseApiResponse(response);
-      Console.WriteLine("-----------------------------");
-      Console.WriteLine("Product: ");
-      Console.WriteLine(productNumber + 1);
-      Console.WriteLine("Chat GPT:");
-      Console.WriteLine(messageContent);
-      Console.WriteLine("-----------------------------");
-      if (messageContent.Contains("correct", StringComparison.OrdinalIgnoreCase))
-      {
-        Console.WriteLine("The product description adheres to the constraints");
-        batchResultsDetails.Add(Tuple.Create(productNumber + 1, descriptionsAndAttributes[productNumber].Description, "correct"));
-      }
-      else if (messageContent.Contains("wrong", StringComparison.OrdinalIgnoreCase))
-      {
-        Console.WriteLine("The product description contains constraint errors");
-        batchResultsDetails.Add(Tuple.Create(productNumber + 1, descriptionsAndAttributes[productNumber].Description, "wrong"));
-      }
+      Console.WriteLine("The product description adheres to the constraints");
+      return Ok("Correct");
     }
-
-    // Write all results to CSV at once, now that assessments are complete
-    _csvHandler.WriteAssessmentsResultsToCSV(batchResultsDetails, _resultsFilePath);
-
+    else if (messageContent.Contains("wrong", StringComparison.OrdinalIgnoreCase))
+    {
+      Console.WriteLine("The product description contains constraint errors");
+      return Ok("Wrong");
+    }
     return Ok();
   }
 

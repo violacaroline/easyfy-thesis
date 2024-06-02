@@ -22,7 +22,7 @@ namespace ProductDescriptionApi.Controllers
         [HttpPost("assess")]
         public async Task<IActionResult> AssessDescriptions([FromBody] ProductDescription request)
         {
-            var response = await AssessDescriptionAsync(request.Description);
+            var response = await AssessDescriptionAsync(request);
             var messageContent = ParseApiResponse(response);
 
             Console.WriteLine("-----------------------------");
@@ -44,13 +44,13 @@ namespace ProductDescriptionApi.Controllers
             return Ok();
         }
 
-        private async Task<string> AssessDescriptionAsync(string productDescription)
+        private async Task<string> AssessDescriptionAsync(ProductDescription productDescription)
         {
             string systemMessage = "Bedöm om följande text innehåller några stavfel, grammatiska fel eller fel skiljetecken. Säkerställ att possessiva pronomenen passar substantiven. Returnera endast 'Wrong' om texten behöver korrigeringar, och 'Correct' om texten är korrekt. utan att ge några ytterligare kommentarer eller detaljer.";
             double temperature = 1;
             try
             {
-                return await _openAIApiService.CreateChatCompletionAsync(systemMessage, productDescription, temperature);
+                return await _openAIApiService.CreateChatCompletionAsync(systemMessage, productDescription.Description, temperature);
             }
             catch (Exception ex)
             {
